@@ -1,0 +1,15 @@
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\Application.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\config\SecurityConfig.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\controller\AuthController.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\Cart.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\CartItem.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\Order.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\OrderItem.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\Product.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\Role.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\entity\User.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\repository\CartRepository.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\repository\OrderRepository.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\repository\ProductRepository.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\repository\UserRepository.java
+C:\TaskSubmitEcom\spring_boot_backend_template\spring_boot_backend_template\src\main\java\com\backend\security\JwtUtil.java
