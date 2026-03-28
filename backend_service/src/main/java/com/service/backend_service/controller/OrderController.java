@@ -2,7 +2,7 @@ package com.service.backend_service.controller;
 
 import com.service.backend_service.dto.ApiResponse;
 import com.service.backend_service.dto.OrderDto;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.service.OrderService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("orders/")
+@RequestMapping("orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -27,27 +27,27 @@ public class OrderController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse<Orders>> addOrder(@Valid @RequestBody OrderDto orderDto) {
-        ResponseEntity<Orders> response = orderService.addOrder(orderDto);
+    public ResponseEntity<ApiResponse<Order>> addOrder(@Valid @RequestBody OrderDto orderDto) {
+        ResponseEntity<Order> response = orderService.addOrder(orderDto);
         return ResponseHelper.build(response, "Order created successfully");
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<ApiResponse<Orders>> getOrder(@PathVariable Long orderId) {
-        ResponseEntity<Orders> response = orderService.getOrder(orderId);
+    public ResponseEntity<ApiResponse<Order>> getOrder(@PathVariable Long orderId) {
+        ResponseEntity<Order> response = orderService.getOrder(orderId);
         return ResponseHelper.build(response, "Order fetched successfully");
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<Orders>>> getAllOrders() {
-        ResponseEntity<List<Orders>> response = orderService.getAllOrders();
+    public ResponseEntity<ApiResponse<List<Order>>> getAllOrders() {
+        ResponseEntity<List<Order>> response = orderService.getAllOrders();
         return ResponseHelper.build(response, "Orders fetched successfully");
     }
 
     @PutMapping("/update/{orderId}")
-    public ResponseEntity<ApiResponse<Orders>> updateOrder(@PathVariable Long orderId,
+    public ResponseEntity<ApiResponse<Order>> updateOrder(@PathVariable Long orderId,
                                                             @RequestBody OrderDto orderDto) {
-        ResponseEntity<Orders> response = orderService.updateOrder(orderId, orderDto);
+        ResponseEntity<Order> response = orderService.updateOrder(orderId, orderDto);
         return ResponseHelper.build(response, "Order updated successfully");
     }
 
