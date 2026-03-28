@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.service.backend_service.dto.UserDto;
+import com.service.backend_service.dto.LoginResponseDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class UserControllerTest {
     @Test
     void loginReturnsTokenInWrappedResponse() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
-        UserDto dto = new UserDto();
+        LoginResponseDto dto = new LoginResponseDto();
         dto.setEmail("a@test.com");
         dto.setToken("token-123");
         when(userService.login(org.mockito.ArgumentMatchers.any())).thenReturn(ResponseEntity.ok(dto));

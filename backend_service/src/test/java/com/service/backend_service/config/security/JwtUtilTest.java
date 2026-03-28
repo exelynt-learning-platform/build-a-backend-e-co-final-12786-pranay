@@ -10,7 +10,6 @@ class JwtUtilTest {
     @Test
     void generateAndExtractUsernameUsesConfiguredSecret() {
         JwtUtil jwtUtil = new JwtUtil(new JwtProperties("12345678901234567890123456789012"));
-        jwtUtil.validateSecret();
 
         String token = jwtUtil.generateToken("alice");
 
@@ -19,8 +18,6 @@ class JwtUtilTest {
 
     @Test
     void validateSecretRejectsShortSecret() {
-        JwtUtil jwtUtil = new JwtUtil(new JwtProperties("short-secret"));
-
-        assertThrows(IllegalStateException.class, jwtUtil::validateSecret);
+        assertThrows(IllegalStateException.class, () -> new JwtProperties("short-secret"));
     }
 }

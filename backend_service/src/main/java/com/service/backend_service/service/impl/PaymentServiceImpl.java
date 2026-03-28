@@ -12,6 +12,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -19,14 +20,17 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrdersRepository orderRepo;
     private final String successUrl;
     private final String cancelUrl;
+    private final String currency;
 
     public PaymentServiceImpl(
             OrdersRepository orderRepo,
             @Value("${payment.success.url:http://localhost:8080/payment/success}") String successUrl,
-            @Value("${payment.cancel.url:http://localhost:8080/payment/cancel}") String cancelUrl) {
+            @Value("${payment.cancel.url:http://localhost:8080/payment/cancel}") String cancelUrl,
+            @Value("${payment.currency:inr}") String currency) {
         this.orderRepo = orderRepo;
         this.successUrl = successUrl;
         this.cancelUrl = cancelUrl;
+        this.currency = currency;
     }
 
     public ResponseEntity<Map<String, String>> createCheckoutSession(Long orderId) {
@@ -47,7 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
                                             .setQuantity(order.getTotalQuantity().longValue())
                                             .setPriceData(
                                                     SessionCreateParams.LineItem.PriceData.builder()
-                                                            .setCurrency("inr")
+                                                            .setCurrency(currency)
                                                             .setUnitAmount((long) (order.getTotalPrice() * 100))
                                                             .setProductData(
                                                                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
@@ -74,8 +78,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String buildRedirectUrl(String baseUrl, Long orderId) {
-        String separator = baseUrl.contains("?") ? "&" : "?";
-        return baseUrl + separator + "orderId=" + orderId;
+        return UriComponentsBuilder.fromUriString(baseUrl)
+                .queryParam("orderId", orderId)
+                .build()
+                .toUriString();
     }
 
     @Override

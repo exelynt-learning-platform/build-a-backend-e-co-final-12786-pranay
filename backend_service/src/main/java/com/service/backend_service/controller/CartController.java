@@ -27,7 +27,7 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    private ResponseEntity<ApiResponse<Cart>> addCart(@Valid @RequestBody CartDto cartDto) {
+    public ResponseEntity<ApiResponse<Cart>> addCart(@Valid @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.addCart(cartDto);
         return ResponseHelper.build(
                 response,
@@ -39,7 +39,7 @@ public class CartController {
     }
 
     @GetMapping("/{cartId}")
-    private ResponseEntity<ApiResponse<Cart>> getCart(@PathVariable Long cartId) {
+    public ResponseEntity<ApiResponse<Cart>> getCart(@PathVariable Long cartId) {
         ResponseEntity<Cart> response = cartService.getCart(cartId);
         return ResponseHelper.build(
                 response,
@@ -51,7 +51,7 @@ public class CartController {
     }
 
     @GetMapping("/all")
-    private ResponseEntity<ApiResponse<List<Cart>>> getAllCarts() {
+    public ResponseEntity<ApiResponse<List<Cart>>> getAllCarts() {
         ResponseEntity<List<Cart>> response = cartService.getAllCarts();
         return ResponseHelper.build(
                 response,
@@ -63,7 +63,7 @@ public class CartController {
     }
 
     @PutMapping("/update/{cartId}")
-    private ResponseEntity<ApiResponse<Cart>> updateCart(@PathVariable Long cartId,
+    public ResponseEntity<ApiResponse<Cart>> updateCart(@PathVariable Long cartId,
                                                          @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.updateCart(cartId, cartDto);
         return ResponseHelper.build(
@@ -76,7 +76,7 @@ public class CartController {
     }
 
     @DeleteMapping("/delete/{cartId}/{productId}")
-    private ResponseEntity<ApiResponse<String>> deleteCart(@PathVariable Long cartId,
+    public ResponseEntity<ApiResponse<String>> deleteCart(@PathVariable Long cartId,
                                                            @PathVariable Long productId) {
         ResponseEntity<String> response = cartService.deleteCart(cartId, productId);
         return ResponseHelper.build(
