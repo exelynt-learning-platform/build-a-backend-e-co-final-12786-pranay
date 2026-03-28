@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.service.backend_service.model.Order;
+import com.service.backend_service.model.Orders;
 import com.service.backend_service.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class OrderControllerTest {
     @Test
     void addOrderReturnsWrappedResponse() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
-        Order order = new Order();
+        Orders order = new Orders();
         order.setId(1L);
         when(orderService.addOrder(org.mockito.ArgumentMatchers.any())).thenReturn(ResponseEntity.ok(order));
 
