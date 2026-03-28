@@ -33,7 +33,7 @@ public class CartController {
                 response,
                 "Cart created successfully",
                 "Cart not found",
-                "Invalid cart request",
+                "Unable to create cart with the provided details",
                 "Requested quantity is not available"
         );
     }
@@ -45,8 +45,8 @@ public class CartController {
                 response,
                 "Cart fetched successfully",
                 "Cart not found",
-                "Invalid cart request",
-                "Requested quantity is not available"
+                "Invalid cart id",
+                "Cart stock information is unavailable"
         );
     }
 
@@ -57,8 +57,8 @@ public class CartController {
                 response,
                 "Carts fetched successfully",
                 "Carts not found",
-                "Invalid cart request",
-                "Requested quantity is not available"
+                "Unable to fetch carts",
+                "Cart stock information is unavailable"
         );
     }
 
@@ -70,7 +70,7 @@ public class CartController {
                 response,
                 "Cart updated successfully",
                 "Cart not found",
-                "Invalid cart request",
+                "Unable to update cart with the provided details",
                 "Requested quantity is not available"
         );
     }
@@ -83,8 +83,8 @@ public class CartController {
                 response,
                 "Cart deleted successfully",
                 "Cart not found",
-                "Invalid cart request",
-                "Requested quantity is not available"
+                "Unable to delete the requested cart item",
+                "Requested cart item is not available"
         );
     }
 }

@@ -14,8 +14,6 @@ import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.OrderService;
 
 import java.util.List;
-
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -50,16 +48,20 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(orderDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (cart.getQuantity() <= 0) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        if (cart.getQuantity() == null || cart.getQuantity() <= 0
+                || product.getStockQuantity() == null
+                || cart.getQuantity() > product.getStockQuantity()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+
+        double calculatedTotalPrice = cart.getQuantity() * product.getPrice();
 
         Orders order = new Orders();
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setShippingDetails(orderDto.getShippingDetails());
         order.setTotalQuantity(orderDto.getTotalQuantity());
-        order.setTotalPrice(orderDto.getTotalPrice());
+        order.setTotalPrice(calculatedTotalPrice);
         order.setCart(cart);
         order.setProduct(product);
         order.setUser(user);

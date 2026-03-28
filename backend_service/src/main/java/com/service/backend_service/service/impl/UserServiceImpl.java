@@ -7,8 +7,10 @@ import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -65,8 +67,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid username or password");
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid username or password", e);
         }
     }
 

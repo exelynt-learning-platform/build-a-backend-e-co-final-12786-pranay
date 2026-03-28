@@ -78,7 +78,8 @@ public class CartServiceImpl implements CartService {
                             return new ResponseEntity<Cart>(HttpStatus.BAD_REQUEST);
                         }
 
-                        int updatedQuantity = existingCart.getQuantity() + cartDto.getQuantity();
+                        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
+                        int updatedQuantity = existingQuantity + cartDto.getQuantity();
                         if (updatedQuantity > product.getStockQuantity()) {
                             return new ResponseEntity<Cart>(HttpStatus.INSUFFICIENT_STORAGE);
                         }
@@ -101,15 +102,19 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<String> deleteCart(Long cartId, Long productId) {
         return cartRepository.findById(cartId)
                 .map(cart -> {
-                    if (cart.getProduct() == null) {
+                    if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
                         return ResponseEntity.badRequest().body("No product found in cart");
                     }
-                    if (!cart.getProduct().getId().equals(productId)) {
+                    boolean removed = cart.getProducts().removeIf(product -> product.getId().equals(productId));
+                    if (!removed) {
                         return ResponseEntity.badRequest().body("Selected product is not present in this cart");
                     }
 
-                    cartRepository.delete(cart);
-                    return ResponseEntity.ok("Product removed from cart and cart deleted successfully");
+                    if (cart.getProducts().isEmpty()) {
+                        cart.setQuantity(0);
+                    }
+                    cartRepository.save(cart);
+                    return ResponseEntity.ok("Product removed from cart successfully");
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

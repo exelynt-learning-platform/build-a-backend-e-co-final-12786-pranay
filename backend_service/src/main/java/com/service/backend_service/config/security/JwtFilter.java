@@ -1,21 +1,35 @@
 package com.service.backend_service.config.security;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Collections;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final List<String> excludedPaths;
+
+    public JwtFilter(
+            JwtUtil jwtUtil,
+            @Value("${security.excluded.paths:/swagger-ui,/v3/api-docs,/auth}") String excludedPaths) {
+        this.jwtUtil = jwtUtil;
+        this.excludedPaths = Arrays.stream(excludedPaths.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .toList();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -25,11 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // ✅ Skip Swagger + Auth endpoints
-        if (path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
-                path.startsWith("/auth")) {
-
+        if (isExcludedPath(path)) {
             chain.doFilter(request, response);
             return;
         }
@@ -37,7 +47,6 @@ public class JwtFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-
             String token = header.substring(7);
             String username = jwtUtil.extractUsername(token);
 
@@ -48,5 +57,9 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    private boolean isExcludedPath(String path) {
+        return excludedPaths.stream().anyMatch(path::startsWith);
     }
 }

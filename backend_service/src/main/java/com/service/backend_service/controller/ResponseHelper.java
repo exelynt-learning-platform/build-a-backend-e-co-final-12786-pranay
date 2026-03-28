@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 
 public final class ResponseHelper {
 
+    private static final String REQUEST_FAILED_MESSAGE = "Request failed";
+
     private ResponseHelper() {
     }
 
@@ -34,7 +36,7 @@ public final class ResponseHelper {
         } else if (status == HttpStatus.INSUFFICIENT_STORAGE) {
             message = insufficientStorageMessage;
         } else {
-            message = "Request failed";
+            message = REQUEST_FAILED_MESSAGE;
         }
 
         if (body instanceof String stringBody && !stringBody.isBlank()) {
