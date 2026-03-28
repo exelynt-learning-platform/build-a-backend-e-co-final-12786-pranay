@@ -17,6 +17,7 @@ import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.impl.CartServiceImpl;
+import com.service.backend_service.service.StockValidationService;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,9 @@ class CartServiceImplTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private StockValidationService stockValidationService;
+
     @InjectMocks
     private CartServiceImpl cartService;
 
@@ -54,6 +58,7 @@ class CartServiceImplTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(stockValidationService.hasSufficientStock(product, 6)).thenReturn(false);
 
         ResponseEntity<Cart> response = cartService.addCart(dto);
 
@@ -98,6 +103,28 @@ class CartServiceImplTest {
     }
 
     @Test
+    void addCartCreatesCartWhenStockIsAvailable() {
+        CartDto dto = new CartDto();
+        dto.setUserId(1L);
+        dto.setProductId(2L);
+        dto.setQuantity(2);
+
+        User user = new User();
+        user.setId(1L);
+        Product product = new Product(2L, "Phone", "img", "desc", 5, 100.0);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
+        when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ResponseEntity<Cart> response = cartService.addCart(dto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().getQuantity());
+    }
+
+    @Test
     void updateCartRejectsWhenProductStockIsMissing() {
         Cart existing = new Cart();
         existing.setId(1L);
@@ -137,15 +164,12 @@ class CartServiceImplTest {
         cart.setQuantity(1);
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-        when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<String> response = cartService.deleteCart(1L, 10L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Product removed from cart successfully", response.getBody());
-        assertEquals(0, cart.getQuantity());
-        assertNull(cart.getProduct());
-        verify(cartRepository).save(cart);
+        assertEquals("Product removed from cart and cart deleted successfully", response.getBody());
+        verify(cartRepository).delete(cart);
     }
 
     @Test

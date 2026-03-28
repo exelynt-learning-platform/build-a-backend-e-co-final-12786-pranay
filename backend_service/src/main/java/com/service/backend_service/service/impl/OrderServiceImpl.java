@@ -12,6 +12,7 @@ import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.OrderService;
+import com.service.backend_service.service.StockValidationService;
 
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -28,15 +29,18 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
 
     private final UserRepository userRepository;
+    private final StockValidationService stockValidationService;
 
     public OrderServiceImpl(OrdersRepository ordersRepository,
                             CartRepository cartRepository,
                             ProductRepository productRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            StockValidationService stockValidationService) {
         this.ordersRepository = ordersRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.stockValidationService = stockValidationService;
     }
 
     @Override
@@ -48,9 +52,7 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(orderDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (cart.getQuantity() == null || cart.getQuantity() <= 0
-                || product.getStockQuantity() == null
-                || cart.getQuantity() > product.getStockQuantity()) {
+        if (!stockValidationService.hasSufficientStock(product, cart.getQuantity())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

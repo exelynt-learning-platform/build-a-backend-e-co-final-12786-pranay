@@ -15,10 +15,7 @@ public final class ResponseHelper {
     }
 
     public static <T> ResponseEntity<ApiResponse<T>> build(ResponseEntity<T> serviceResponse,
-                                                           String successMessage,
-                                                           String notFoundMessage,
-                                                           String badRequestMessage,
-                                                           String insufficientStorageMessage) {
+                                                           String successMessage) {
         HttpStatus status = HttpStatus.valueOf(serviceResponse.getStatusCode().value());
         T body = serviceResponse.getBody();
 

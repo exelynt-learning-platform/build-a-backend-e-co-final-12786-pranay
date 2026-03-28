@@ -50,7 +50,7 @@ class ProductControllerTest {
         mockMvc.perform(get("/products/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Product not found"));
+                .andExpect(jsonPath("$.message").value("Resource not found"));
     }
 
     @Test

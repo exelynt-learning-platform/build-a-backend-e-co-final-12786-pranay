@@ -48,6 +48,6 @@ class OrderControllerTest {
 
         mockMvc.perform(get("/orders/9"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Order not found"));
+                .andExpect(jsonPath("$.message").value("Resource not found"));
     }
 }

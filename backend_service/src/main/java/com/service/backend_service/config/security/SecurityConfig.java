@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .toList();
+        validateAllowedOrigins(this.allowedOrigins);
     }
 
     @Bean
@@ -77,5 +78,17 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private void validateAllowedOrigins(List<String> origins) {
+        if (origins.isEmpty()) {
+            throw new IllegalStateException("app.cors.allowed-origins must include at least one explicit origin");
+        }
+        boolean hasWildcardLikeOrigin = origins.stream().anyMatch(origin -> origin.contains("*"));
+        if (hasWildcardLikeOrigin) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins cannot contain wildcard origins when credentials are enabled"
+            );
+        }
     }
 }

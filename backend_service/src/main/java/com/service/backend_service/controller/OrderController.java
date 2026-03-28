@@ -27,63 +27,33 @@ public class OrderController {
     }
 
     @PostMapping("/add")
-    private ResponseEntity<ApiResponse<Orders>> addOrder(@Valid @RequestBody OrderDto orderDto) {
+    public ResponseEntity<ApiResponse<Orders>> addOrder(@Valid @RequestBody OrderDto orderDto) {
         ResponseEntity<Orders> response = orderService.addOrder(orderDto);
-        return ResponseHelper.build(
-                response,
-                "Order created successfully",
-                "Order not found",
-                "Invalid order request",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Order created successfully");
     }
 
     @GetMapping("/{orderId}")
-    private ResponseEntity<ApiResponse<Orders>> getOrder(@PathVariable Long orderId) {
+    public ResponseEntity<ApiResponse<Orders>> getOrder(@PathVariable Long orderId) {
         ResponseEntity<Orders> response = orderService.getOrder(orderId);
-        return ResponseHelper.build(
-                response,
-                "Order fetched successfully",
-                "Order not found",
-                "Invalid order request",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Order fetched successfully");
     }
 
     @GetMapping("/all")
-    private ResponseEntity<ApiResponse<List<Orders>>> getAllOrders() {
+    public ResponseEntity<ApiResponse<List<Orders>>> getAllOrders() {
         ResponseEntity<List<Orders>> response = orderService.getAllOrders();
-        return ResponseHelper.build(
-                response,
-                "Orders fetched successfully",
-                "Orders not found",
-                "Invalid order request",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Orders fetched successfully");
     }
 
     @PutMapping("/update/{orderId}")
-    private ResponseEntity<ApiResponse<Orders>> updateOrder(@PathVariable Long orderId,
+    public ResponseEntity<ApiResponse<Orders>> updateOrder(@PathVariable Long orderId,
                                                             @RequestBody OrderDto orderDto) {
         ResponseEntity<Orders> response = orderService.updateOrder(orderId, orderDto);
-        return ResponseHelper.build(
-                response,
-                "Order updated successfully",
-                "Order not found",
-                "Invalid order request",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Order updated successfully");
     }
 
     @DeleteMapping("/delete/{orderId}")
-    private ResponseEntity<ApiResponse<String>> deleteOrder(@PathVariable Long orderId) {
+    public ResponseEntity<ApiResponse<String>> deleteOrder(@PathVariable Long orderId) {
         ResponseEntity<String> response = orderService.deleteOrder(orderId);
-        return ResponseHelper.build(
-                response,
-                "Order deleted successfully",
-                "Order not found",
-                "Invalid order request",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Order deleted successfully");
     }
 }

@@ -21,25 +21,25 @@ public class PaymentServiceImpl implements PaymentService {
     private final String successUrl;
     private final String cancelUrl;
     private final String currency;
+    private final String callbackToken;
 
     public PaymentServiceImpl(
             OrdersRepository orderRepo,
             @Value("${payment.success.url:http://localhost:8080/payment/success}") String successUrl,
             @Value("${payment.cancel.url:http://localhost:8080/payment/cancel}") String cancelUrl,
-            @Value("${payment.currency:inr}") String currency) {
+            @Value("${payment.currency:inr}") String currency,
+            @Value("${payment.callback.token:}") String callbackToken) {
         this.orderRepo = orderRepo;
         this.successUrl = successUrl;
         this.cancelUrl = cancelUrl;
         this.currency = currency;
+        this.callbackToken = callbackToken;
     }
 
     public ResponseEntity<Map<String, String>> createCheckoutSession(Long orderId) {
 
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order == null) {
-            throw new RuntimeException("Order cannot be null");
-        }
         try {
             SessionCreateParams params =
                     SessionCreateParams.builder()
@@ -80,6 +80,7 @@ public class PaymentServiceImpl implements PaymentService {
     private String buildRedirectUrl(String baseUrl, Long orderId) {
         return UriComponentsBuilder.fromUriString(baseUrl)
                 .queryParam("orderId", orderId)
+                .queryParam("token", callbackToken)
                 .build()
                 .toUriString();
     }

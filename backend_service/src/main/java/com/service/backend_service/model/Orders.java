@@ -60,14 +60,6 @@ public class Orders {
         return cart != null ? cart.getId() : null;
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
     @JsonProperty("productId")
     public Long getProductId() {
         return product != null ? product.getId() : null;

@@ -24,25 +24,13 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto userDto) {
         ResponseEntity<User> response = userService.register(userDto);
-        return ResponseHelper.build(
-                response,
-                "User registered successfully",
-                "User not found",
-                "Invalid user request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "User registered successfully");
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody UserDto userDto) {
         ResponseEntity<LoginResponseDto> response = userService.login(userDto);
-        return ResponseHelper.build(
-                response,
-                "User logged in successfully",
-                "User not found",
-                "Invalid username or password",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "User logged in successfully");
     }
 
 }

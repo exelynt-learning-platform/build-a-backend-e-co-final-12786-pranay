@@ -29,62 +29,32 @@ public class CartController {
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<Cart>> addCart(@Valid @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.addCart(cartDto);
-        return ResponseHelper.build(
-                response,
-                "Cart created successfully",
-                "Cart not found",
-                "Unable to create cart with the provided details",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Cart created successfully");
     }
 
     @GetMapping("/{cartId}")
     public ResponseEntity<ApiResponse<Cart>> getCart(@PathVariable Long cartId) {
         ResponseEntity<Cart> response = cartService.getCart(cartId);
-        return ResponseHelper.build(
-                response,
-                "Cart fetched successfully",
-                "Cart not found",
-                "Invalid cart id",
-                "Cart stock information is unavailable"
-        );
+        return ResponseHelper.build(response, "Cart fetched successfully");
     }
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Cart>>> getAllCarts() {
         ResponseEntity<List<Cart>> response = cartService.getAllCarts();
-        return ResponseHelper.build(
-                response,
-                "Carts fetched successfully",
-                "Carts not found",
-                "Unable to fetch carts",
-                "Cart stock information is unavailable"
-        );
+        return ResponseHelper.build(response, "Carts fetched successfully");
     }
 
     @PutMapping("/update/{cartId}")
     public ResponseEntity<ApiResponse<Cart>> updateCart(@PathVariable Long cartId,
                                                          @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.updateCart(cartId, cartDto);
-        return ResponseHelper.build(
-                response,
-                "Cart updated successfully",
-                "Cart not found",
-                "Unable to update cart with the provided details",
-                "Requested quantity is not available"
-        );
+        return ResponseHelper.build(response, "Cart updated successfully");
     }
 
     @DeleteMapping("/delete/{cartId}/{productId}")
     public ResponseEntity<ApiResponse<String>> deleteCart(@PathVariable Long cartId,
                                                            @PathVariable Long productId) {
         ResponseEntity<String> response = cartService.deleteCart(cartId, productId);
-        return ResponseHelper.build(
-                response,
-                "Cart deleted successfully",
-                "Cart not found",
-                "Unable to delete the requested cart item",
-                "Requested cart item is not available"
-        );
+        return ResponseHelper.build(response, "Cart deleted successfully");
     }
 }

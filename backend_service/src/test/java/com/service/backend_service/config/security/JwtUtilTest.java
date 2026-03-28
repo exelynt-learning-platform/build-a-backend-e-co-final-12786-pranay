@@ -3,13 +3,14 @@ package com.service.backend_service.config.security;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
 
 class JwtUtilTest {
 
     @Test
     void generateAndExtractUsernameUsesConfiguredSecret() {
-        JwtUtil jwtUtil = new JwtUtil(new JwtProperties("12345678901234567890123456789012"));
+        JwtUtil jwtUtil = new JwtUtil(new JwtProperties("Abcdefghijklmnopqrstuvwx123456!@", null));
 
         String token = jwtUtil.generateToken("alice");
 
@@ -18,6 +19,34 @@ class JwtUtilTest {
 
     @Test
     void validateSecretRejectsShortSecret() {
-        assertThrows(IllegalStateException.class, () -> new JwtProperties("short-secret"));
+        assertThrows(IllegalStateException.class, () -> new JwtProperties("short-secret", null));
+    }
+
+    @Test
+    void validateSecretRejectsWeakSecretWithoutRequiredCharacterClasses() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> new JwtProperties("abcdefghijklmnopqrstuvwxyz123456", null)
+        );
+    }
+
+    @Test
+    void extractUsernameAcceptsPreviousSecretDuringRotation() {
+        JwtUtil previousJwtUtil = new JwtUtil(new JwtProperties("Abcdefghijklmnopqrstuvwx123456!@", null));
+        String token = previousJwtUtil.generateToken("alice");
+        JwtUtil rotatedJwtUtil = new JwtUtil(
+                new JwtProperties("Zyxwvutsrqponmlkjihgfedc654321!@", "Abcdefghijklmnopqrstuvwx123456!@")
+        );
+
+        assertEquals("alice", rotatedJwtUtil.extractUsername(token));
+    }
+
+    @Test
+    void extractUsernameRejectsTokenWhenNoConfiguredSecretMatches() {
+        JwtUtil signingJwtUtil = new JwtUtil(new JwtProperties("Abcdefghijklmnopqrstuvwx123456!@", null));
+        String token = signingJwtUtil.generateToken("alice");
+        JwtUtil validatingJwtUtil = new JwtUtil(new JwtProperties("Zyxwvutsrqponmlkjihgfedc654321!@", null));
+
+        assertThrows(JwtException.class, () -> validatingJwtUtil.extractUsername(token));
     }
 }
