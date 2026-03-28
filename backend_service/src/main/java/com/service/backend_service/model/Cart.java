@@ -25,7 +25,7 @@ public class Cart {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", referencedColumnName = "id")
     @JsonIgnore
     private User user;
@@ -46,10 +46,13 @@ public class Cart {
 
     @Transient
     public Product getProduct() {
-        return products.stream().findFirst().orElse(null);
+        return products != null && !products.isEmpty() ? products.stream().findFirst().orElse(null) : null;
     }
 
     public void setProduct(Product product) {
+        if (products == null) {
+            products = new LinkedHashSet<>();
+        }
         products.clear();
         if (product != null) {
             products.add(product);

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,7 +37,8 @@ class PaymentServiceImplTest {
         paymentService = new PaymentServiceImpl(
                 orderRepo,
                 "http://localhost:8080/payment/success",
-                "http://localhost:8080/payment/cancel"
+                "http://localhost:8080/payment/cancel",
+                "usd"
         );
     }
 
@@ -82,6 +83,7 @@ class PaymentServiceImplTest {
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
         try (MockedStatic<Session> mocked = mockStatic(Session.class)) {
+            ArgumentCaptor<SessionCreateParams> paramsCaptor = ArgumentCaptor.forClass(SessionCreateParams.class);
             mocked.when(() -> Session.create(org.mockito.ArgumentMatchers.any(SessionCreateParams.class)))
                     .thenReturn(session);
 
@@ -90,6 +92,11 @@ class PaymentServiceImplTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().containsKey("checkoutUrl"));
             assertEquals("http://checkout", response.getBody().get("checkoutUrl"));
+            mocked.verify(() -> Session.create(paramsCaptor.capture()));
+            SessionCreateParams params = paramsCaptor.getValue();
+            assertEquals("usd", params.getLineItems().get(0).getPriceData().getCurrency());
+            assertEquals("http://localhost:8080/payment/success?orderId=1", params.getSuccessUrl());
+            assertEquals("http://localhost:8080/payment/cancel?orderId=1", params.getCancelUrl());
         }
     }
 }

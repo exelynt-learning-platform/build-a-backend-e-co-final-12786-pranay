@@ -1,6 +1,7 @@
 package com.service.backend_service.controller;
 
 import com.service.backend_service.dto.ApiResponse;
+import com.service.backend_service.dto.LoginResponseDto;
 import com.service.backend_service.dto.UserDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.service.UserService;
@@ -21,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    private ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto userDto) {
+    public ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto userDto) {
         ResponseEntity<User> response = userService.register(userDto);
         return ResponseHelper.build(
                 response,
@@ -33,8 +34,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    private ResponseEntity<ApiResponse<UserDto>> login(@RequestBody UserDto userDto) {
-        ResponseEntity<UserDto> response = userService.login(userDto);
+    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody UserDto userDto) {
+        ResponseEntity<LoginResponseDto> response = userService.login(userDto);
         return ResponseHelper.build(
                 response,
                 "User logged in successfully",

@@ -2,11 +2,14 @@ package com.service.backend_service.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.service.backend_service.dto.CartDto;
+import com.service.backend_service.exception.ProductNotFoundException;
+import com.service.backend_service.exception.UserNotFoundException;
 import com.service.backend_service.model.Cart;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
@@ -143,5 +146,33 @@ class CartServiceImplTest {
         assertEquals("Product removed from cart successfully", response.getBody());
         assertEquals(0, cart.getQuantity());
         verify(cartRepository).save(cart);
+    }
+
+    @Test
+    void addCartThrowsUserNotFoundExceptionWhenUserIsMissing() {
+        CartDto dto = new CartDto();
+        dto.setUserId(1L);
+        dto.setProductId(2L);
+        dto.setQuantity(1);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> cartService.addCart(dto));
+    }
+
+    @Test
+    void updateCartThrowsProductNotFoundExceptionWhenUpdatedProductIsMissing() {
+        Cart existing = new Cart();
+        existing.setId(1L);
+        existing.setQuantity(2);
+        existing.setProduct(new Product(10L, "Phone", "img", "desc", 10, 100.0));
+
+        CartDto dto = new CartDto();
+        dto.setProductId(99L);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class, () -> cartService.updateCart(1L, dto));
     }
 }

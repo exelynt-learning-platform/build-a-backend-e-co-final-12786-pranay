@@ -1,6 +1,8 @@
 package com.service.backend_service.service.impl;
 
 import com.service.backend_service.dto.CartDto;
+import com.service.backend_service.exception.ProductNotFoundException;
+import com.service.backend_service.exception.UserNotFoundException;
 import com.service.backend_service.model.Cart;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
@@ -35,9 +37,9 @@ public class CartServiceImpl implements CartService {
     @Override
     public ResponseEntity<Cart> addCart(CartDto cartDto) {
         User user = userRepository.findById(cartDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         Product product = productRepository.findById(cartDto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
         if (product.getStockQuantity() < cartDto.getQuantity()) {
             return new ResponseEntity<>(HttpStatus.INSUFFICIENT_STORAGE);
         }
@@ -66,36 +68,54 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<Cart> updateCart(Long cartId, CartDto cartDto) {
         return cartRepository.findById(cartId)
                 .map(existingCart -> {
-                    Product product = existingCart.getProduct();
-
-                    if (cartDto.getProductId() != null) {
-                        product = productRepository.findById(cartDto.getProductId())
-                                .orElseThrow(() -> new RuntimeException("Product not found"));
-                        existingCart.setProduct(product);
+                    Product product = resolveUpdatedProduct(existingCart, cartDto);
+                    ResponseEntity<Cart> quantityValidationResponse = applyUpdatedQuantity(existingCart, cartDto, product);
+                    if (quantityValidationResponse != null) {
+                        return quantityValidationResponse;
                     }
-                    if (cartDto.getQuantity() != null) {
-                        if (product == null || product.getStockQuantity() == null) {
-                            return new ResponseEntity<Cart>(HttpStatus.BAD_REQUEST);
-                        }
-
-                        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
-                        int updatedQuantity = existingQuantity + cartDto.getQuantity();
-                        if (updatedQuantity > product.getStockQuantity()) {
-                            return new ResponseEntity<Cart>(HttpStatus.INSUFFICIENT_STORAGE);
-                        }
-
-                        existingCart.setQuantity(updatedQuantity);
-                    }
-                    if (cartDto.getUserId() != null) {
-                        User user = userRepository.findById(cartDto.getUserId())
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-                        existingCart.setUser(user);
-                    }
-
-                    Cart updatedCart = cartRepository.save(existingCart);
-                    return ResponseEntity.ok(updatedCart);
+                    applyUpdatedUser(existingCart, cartDto);
+                    return ResponseEntity.ok(cartRepository.save(existingCart));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private Product resolveUpdatedProduct(Cart existingCart, CartDto cartDto) {
+        if (cartDto.getProductId() == null) {
+            return existingCart.getProduct();
+        }
+
+        Product updatedProduct = productRepository.findById(cartDto.getProductId())
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+        existingCart.setProduct(updatedProduct);
+        return updatedProduct;
+    }
+
+    private ResponseEntity<Cart> applyUpdatedQuantity(Cart existingCart, CartDto cartDto, Product product) {
+        if (cartDto.getQuantity() == null) {
+            return null;
+        }
+        if (product == null || product.getStockQuantity() == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
+        int updatedQuantity = existingQuantity + cartDto.getQuantity();
+        if (updatedQuantity > product.getStockQuantity()) {
+            return new ResponseEntity<>(HttpStatus.INSUFFICIENT_STORAGE);
+        }
+
+        existingCart.setQuantity(updatedQuantity);
+        return null;
+    }
+
+    private void applyUpdatedUser(Cart existingCart, CartDto cartDto) {
+        if (cartDto.getUserId() == null) {
+            return;
+        }
+
+        User user = userRepository.findById(cartDto.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        existingCart.setUser(user);
     }
 
     @Override

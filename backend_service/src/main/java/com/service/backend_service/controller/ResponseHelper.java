@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 public final class ResponseHelper {
 
     private static final String REQUEST_FAILED_MESSAGE = "Request failed";
+    private static final String NOT_FOUND_MESSAGE = "Resource not found";
+    private static final String BAD_REQUEST_MESSAGE = "Invalid request";
+    private static final String INSUFFICIENT_STORAGE_MESSAGE = "Requested quantity is unavailable";
 
     private ResponseHelper() {
     }
@@ -30,11 +33,11 @@ public final class ResponseHelper {
 
         String message;
         if (status == HttpStatus.NOT_FOUND) {
-            message = notFoundMessage;
+            message = NOT_FOUND_MESSAGE;
         } else if (status == HttpStatus.BAD_REQUEST) {
-            message = badRequestMessage;
+            message = BAD_REQUEST_MESSAGE;
         } else if (status == HttpStatus.INSUFFICIENT_STORAGE) {
-            message = insufficientStorageMessage;
+            message = INSUFFICIENT_STORAGE_MESSAGE;
         } else {
             message = REQUEST_FAILED_MESSAGE;
         }

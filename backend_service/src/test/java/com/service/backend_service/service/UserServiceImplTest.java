@@ -1,17 +1,19 @@
 package com.service.backend_service.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.service.backend_service.config.security.JwtUtil;
+import com.service.backend_service.dto.LoginResponseDto;
 import com.service.backend_service.dto.UserDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.impl.UserServiceImpl;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.modelmapper.ModelMapper;
@@ -78,10 +80,10 @@ class UserServiceImplTest {
         when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
         when(jwtUtil.generateToken("a@test.com")).thenReturn("token-123");
 
-        UserDto response = userService.login(dto).getBody();
+        LoginResponseDto response = userService.login(dto).getBody();
 
         assertEquals("token-123", response.getToken());
-        assertNull(response.getPassword());
+        assertEquals("a@test.com", response.getEmail());
         verify(authenticationManager).authenticate(any());
     }
 
@@ -98,5 +100,20 @@ class UserServiceImplTest {
         BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> userService.login(dto));
 
         assertEquals("Invalid username or password", exception.getMessage());
+    }
+
+    @Test
+    void loadUserByUsernameReturnsDefaultUserRole() {
+        User user = new User();
+        user.setEmail("a@test.com");
+        user.setPassword("encoded");
+
+        when(userRepository.findByEmail("a@test.com")).thenReturn(Optional.of(user));
+
+        org.springframework.security.core.userdetails.UserDetails userDetails =
+                userService.loadUserByUsername("a@test.com");
+
+        assertTrue(userDetails.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_USER".equals(authority.getAuthority())));
     }
 }

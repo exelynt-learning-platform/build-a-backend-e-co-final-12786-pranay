@@ -1,6 +1,7 @@
 package com.service.backend_service.service.impl;
 
 import com.service.backend_service.config.security.JwtUtil;
+import com.service.backend_service.dto.LoginResponseDto;
 import com.service.backend_service.dto.UserDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.UserRepository;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -53,12 +55,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public ResponseEntity<UserDto> login(UserDto userDto) {
+    public ResponseEntity<LoginResponseDto> login(UserDto userDto) {
         authenticate(userDto.getEmail(), userDto.getPassword());
         String token = jwtUtil.generateToken(userDto.getEmail());
-        userDto.setPassword(null);
-        userDto.setToken(token);
-        return ResponseEntity.ok(userDto);
+        LoginResponseDto response = new LoginResponseDto();
+        response.setEmail(userDto.getEmail());
+        response.setToken(token);
+        return ResponseEntity.ok(response);
     }
 
     private void authenticate(String username, String password) {
@@ -82,7 +85,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.emptyList()
+                List.of(() -> "ROLE_USER")
         );
     }
 }

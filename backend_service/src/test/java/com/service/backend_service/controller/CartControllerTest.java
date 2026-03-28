@@ -55,7 +55,7 @@ class CartControllerTest {
                         .content("{\"quantity\":10}"))
                 .andExpect(status().isInsufficientStorage())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Requested quantity is not available"));
+                .andExpect(jsonPath("$.message").value("Requested quantity is unavailable"));
     }
 
     @Test

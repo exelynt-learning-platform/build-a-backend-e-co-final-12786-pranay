@@ -86,41 +86,56 @@ public class OrderServiceImpl implements OrderService {
     public ResponseEntity<Orders> updateOrder(Long orderId, OrderDto orderDto) {
         return ordersRepository.findById(orderId)
                 .map(existingOrder -> {
-                    if (orderDto.getOrderStatus() != null) {
-                        existingOrder.setOrderStatus(orderDto.getOrderStatus());
-                    }
-                    if (orderDto.getPaymentStatus() != null) {
-                        existingOrder.setPaymentStatus(orderDto.getPaymentStatus());
-                    }
-                    if (orderDto.getShippingDetails() != null) {
-                        existingOrder.setShippingDetails(orderDto.getShippingDetails());
-                    }
-                    if (orderDto.getTotalQuantity() != null) {
-                        existingOrder.setTotalQuantity(orderDto.getTotalQuantity());
-                    }
-                    if (orderDto.getTotalPrice() != null) {
-                        existingOrder.setTotalPrice(orderDto.getTotalPrice());
-                    }
-                    if (orderDto.getCartId() != null) {
-                        Cart cart = cartRepository.findById(orderDto.getCartId())
-                                .orElseThrow(() -> new RuntimeException("Cart not found"));
-                        existingOrder.setCart(cart);
-                    }
-                    if (orderDto.getProductId() != null) {
-                        Product product = productRepository.findById(orderDto.getProductId())
-                                .orElseThrow(() -> new RuntimeException("Product not found"));
-                        existingOrder.setProduct(product);
-                    }
-                    if (orderDto.getUserId() != null) {
-                        User user = userRepository.findById(orderDto.getUserId())
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-                        existingOrder.setUser(user);
-                    }
-
-                    Orders updatedOrder = ordersRepository.save(existingOrder);
-                    return ResponseEntity.ok(updatedOrder);
+                    applyScalarUpdates(existingOrder, orderDto);
+                    applyRelatedEntityUpdates(existingOrder, orderDto);
+                    return ResponseEntity.ok(ordersRepository.save(existingOrder));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private void applyScalarUpdates(Orders existingOrder, OrderDto orderDto) {
+        if (orderDto.getOrderStatus() != null) {
+            existingOrder.setOrderStatus(orderDto.getOrderStatus());
+        }
+        if (orderDto.getPaymentStatus() != null) {
+            existingOrder.setPaymentStatus(orderDto.getPaymentStatus());
+        }
+        if (orderDto.getShippingDetails() != null) {
+            existingOrder.setShippingDetails(orderDto.getShippingDetails());
+        }
+        if (orderDto.getTotalQuantity() != null) {
+            existingOrder.setTotalQuantity(orderDto.getTotalQuantity());
+        }
+        if (orderDto.getTotalPrice() != null) {
+            existingOrder.setTotalPrice(orderDto.getTotalPrice());
+        }
+    }
+
+    private void applyRelatedEntityUpdates(Orders existingOrder, OrderDto orderDto) {
+        if (orderDto.getCartId() != null) {
+            existingOrder.setCart(findCart(orderDto.getCartId()));
+        }
+        if (orderDto.getProductId() != null) {
+            existingOrder.setProduct(findProduct(orderDto.getProductId()));
+        }
+        if (orderDto.getUserId() != null) {
+            existingOrder.setUser(findUser(orderDto.getUserId()));
+        }
+    }
+
+    private Cart findCart(Long cartId) {
+        return cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+    }
+
+    private Product findProduct(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override

@@ -42,7 +42,7 @@ public class Orders {
     private Double totalPrice;
 
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_cart_id",referencedColumnName = "id")
     @JsonIgnore
     private Cart cart;
@@ -68,10 +68,13 @@ public class Orders {
 
     @Transient
     public Product getProduct() {
-        return products.stream().findFirst().orElse(null);
+        return products != null && !products.isEmpty() ? products.stream().findFirst().orElse(null) : null;
     }
 
     public void setProduct(Product product) {
+        if (products == null) {
+            products = new LinkedHashSet<>();
+        }
         products.clear();
         if (product != null) {
             products.add(product);
