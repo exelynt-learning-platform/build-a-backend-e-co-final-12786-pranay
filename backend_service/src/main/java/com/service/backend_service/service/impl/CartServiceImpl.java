@@ -98,29 +98,17 @@ public class CartServiceImpl implements CartService {
         if (cartDto.getQuantity() == null) {
             return null;
         }
-
-        Integer updatedQuantity = calculateUpdatedQuantity(existingCart, cartDto.getQuantity());
-        ResponseEntity<Cart> validationResponse = validateUpdatedQuantity(product, updatedQuantity);
-        if (validationResponse != null) {
-            return validationResponse;
-        }
-
-        existingCart.setQuantity(updatedQuantity);
-        return null;
-    }
-
-    private Integer calculateUpdatedQuantity(Cart existingCart, Integer requestedQuantityDelta) {
-        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
-        return existingQuantity + requestedQuantityDelta;
-    }
-
-    private ResponseEntity<Cart> validateUpdatedQuantity(Product product, Integer updatedQuantity) {
         if (product == null || product.getStockQuantity() == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+
+        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
+        int updatedQuantity = existingQuantity + cartDto.getQuantity();
         if (updatedQuantity > product.getStockQuantity()) {
             return new ResponseEntity<>(HttpStatus.INSUFFICIENT_STORAGE);
         }
+
+        existingCart.setQuantity(updatedQuantity);
         return null;
     }
 
@@ -141,7 +129,7 @@ public class CartServiceImpl implements CartService {
                     if (cart.getProduct() == null) {
                         return ResponseEntity.badRequest().body("No product found in cart");
                     }
-                    if (isDifferentProductSelection(cart.getProduct(), productId)) {
+                    if (!cart.getProduct().getId().equals(productId)) {
                         return ResponseEntity.badRequest().body("Selected product is not present in this cart");
                     }
 
@@ -149,9 +137,5 @@ public class CartServiceImpl implements CartService {
                     return ResponseEntity.ok("Product removed from cart and cart deleted successfully");
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    private boolean isDifferentProductSelection(Product cartProduct, Long requestedProductId) {
-        return !cartProduct.getId().equals(requestedProductId);
     }
 }

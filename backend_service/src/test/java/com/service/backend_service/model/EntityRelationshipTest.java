@@ -21,7 +21,7 @@ class EntityRelationshipTest {
 
     @Test
     void ordersGetProductReturnsNullWhenProductIsMissing() {
-        Order order = new Order();
+        Orders order = new Orders();
 
         assertNull(order.getProduct());
     }
@@ -35,7 +35,7 @@ class EntityRelationshipTest {
 
     @Test
     void ordersUsesManyToOneRelationshipForCart() throws NoSuchFieldException {
-        Field cartField = Order.class.getDeclaredField("cart");
+        Field cartField = Orders.class.getDeclaredField("cart");
 
         assertTrue(cartField.isAnnotationPresent(ManyToOne.class));
     }
@@ -56,15 +56,15 @@ class EntityRelationshipTest {
 
     @Test
     void ordersUsesManyToOneRelationshipForProduct() throws NoSuchFieldException {
-        Field productField = Order.class.getDeclaredField("product");
+        Field productField = Orders.class.getDeclaredField("product");
 
         assertTrue(productField.isAnnotationPresent(ManyToOne.class));
     }
 
     @Test
     void ordersUsesStringEnumMappingForStatuses() throws NoSuchFieldException {
-        Field orderStatusField = Order.class.getDeclaredField("orderStatus");
-        Field paymentStatusField = Order.class.getDeclaredField("paymentStatus");
+        Field orderStatusField = Orders.class.getDeclaredField("orderStatus");
+        Field paymentStatusField = Orders.class.getDeclaredField("paymentStatus");
 
         assertTrue(orderStatusField.isAnnotationPresent(Enumerated.class));
         assertTrue(paymentStatusField.isAnnotationPresent(Enumerated.class));
