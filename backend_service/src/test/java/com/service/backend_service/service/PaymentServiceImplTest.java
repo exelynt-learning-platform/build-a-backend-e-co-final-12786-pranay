@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
-import com.service.backend_service.model.Order;
+import com.service.backend_service.model.Orders;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.service.impl.PaymentServiceImpl;
 import com.stripe.model.checkout.Session;
@@ -45,7 +45,7 @@ class PaymentServiceImplTest {
 
     @Test
     void paymentSuccessUpdatesOrderState() {
-        Order order = new Order();
+        Orders order = new Orders();
         order.setId(1L);
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
@@ -59,7 +59,7 @@ class PaymentServiceImplTest {
 
     @Test
     void paymentCancelUpdatesOrderState() {
-        Order order = new Order();
+        Orders order = new Orders();
         order.setId(1L);
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
@@ -73,7 +73,7 @@ class PaymentServiceImplTest {
 
     @Test
     void createCheckoutSessionReturnsCheckoutUrl() throws Exception {
-        Order order = new Order();
+        Orders order = new Orders();
         order.setId(1L);
         order.setTotalQuantity(2);
         order.setTotalPrice(100.0);

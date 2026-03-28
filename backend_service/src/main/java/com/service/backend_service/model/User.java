@@ -36,6 +36,6 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<Order> orders = new LinkedHashSet<>();
+    private Set<Orders> orders = new LinkedHashSet<>();
 
 }
