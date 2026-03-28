@@ -2,7 +2,7 @@ package com.service.backend_service.service.impl;
 
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
-import com.service.backend_service.model.Order;
+import com.service.backend_service.model.Orders;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.service.PaymentService;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     public ResponseEntity<Map<String, String>> createCheckoutSession(Long orderId) {
 
-        Order order = orderRepo.findById(orderId)
+        Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         try {
             SessionCreateParams params =
@@ -88,7 +88,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public ResponseEntity<String> paymentSuccess(Long orderId) {
 
-        Order order = orderRepo.findById(orderId)
+        Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setOrderStatus(OrderStatus.CONFIRMED);
         order.setPaymentStatus(PaymentStatus.COMPLETED);
@@ -99,7 +99,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public ResponseEntity<String> paymentCancel(Long orderId) {
-        Order order = orderRepo.findById(orderId)
+        Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setPaymentStatus(PaymentStatus.FAILED);
