@@ -122,17 +122,15 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<String> deleteCart(Long cartId, Long productId) {
         return cartRepository.findById(cartId)
                 .map(cart -> {
-                    if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
+                    if (cart.getProduct() == null) {
                         return ResponseEntity.badRequest().body("No product found in cart");
                     }
-                    boolean removed = cart.getProducts().removeIf(product -> product.getId().equals(productId));
-                    if (!removed) {
+                    if (!cart.getProduct().getId().equals(productId)) {
                         return ResponseEntity.badRequest().body("Selected product is not present in this cart");
                     }
 
-                    if (cart.getProducts().isEmpty()) {
-                        cart.setQuantity(0);
-                    }
+                    cart.setProduct(null);
+                    cart.setQuantity(0);
                     cartRepository.save(cart);
                     return ResponseEntity.ok("Product removed from cart successfully");
                 })

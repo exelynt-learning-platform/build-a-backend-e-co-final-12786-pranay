@@ -17,7 +17,6 @@ import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.impl.CartServiceImpl;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -134,7 +133,7 @@ class CartServiceImplTest {
         Cart cart = new Cart();
         cart.setId(1L);
         Product product = new Product(10L, "Phone", "img", "desc", 10, 100.0);
-        cart.setProducts(new LinkedHashSet<>(java.util.Set.of(product)));
+        cart.setProduct(product);
         cart.setQuantity(1);
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
@@ -145,6 +144,7 @@ class CartServiceImplTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product removed from cart successfully", response.getBody());
         assertEquals(0, cart.getQuantity());
+        assertNull(cart.getProduct());
         verify(cartRepository).save(cart);
     }
 
