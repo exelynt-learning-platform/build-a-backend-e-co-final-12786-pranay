@@ -27,63 +27,33 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    private ResponseEntity<ApiResponse<Product>> addProduct(@Valid @RequestBody ProductDto productDto) {
+    public ResponseEntity<ApiResponse<Product>> addProduct(@Valid @RequestBody ProductDto productDto) {
         ResponseEntity<Product> response = productService.addProduct(productDto);
-        return ResponseHelper.build(
-                response,
-                "Product added successfully",
-                "Product not found",
-                "Invalid product request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "Product added successfully");
     }
 
     @GetMapping("/{productId}")
-    private ResponseEntity<ApiResponse<Product>> getProduct(@PathVariable Long productId) {
+    public ResponseEntity<ApiResponse<Product>> getProduct(@PathVariable Long productId) {
         ResponseEntity<Product> response = productService.getProduct(productId);
-        return ResponseHelper.build(
-                response,
-                "Product fetched successfully",
-                "Product not found",
-                "Invalid product request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "Product fetched successfully");
     }
 
     @GetMapping("/all")
-    private ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
+    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
         ResponseEntity<List<Product>> response = productService.getAllProducts();
-        return ResponseHelper.build(
-                response,
-                "Products fetched successfully",
-                "Products not found",
-                "Invalid product request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "Products fetched successfully");
     }
 
     @PutMapping("/update/{productId}")
-    private ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long productId,
+    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long productId,
                                                                @RequestBody ProductDto productDto) {
         ResponseEntity<Product> response = productService.updateProduct(productId, productDto);
-        return ResponseHelper.build(
-                response,
-                "Product updated successfully",
-                "Product not found",
-                "Invalid product request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "Product updated successfully");
     }
 
     @DeleteMapping("/delete/{productId}")
-    private ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long productId) {
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long productId) {
         ResponseEntity<String> response = productService.deleteProduct(productId);
-        return ResponseHelper.build(
-                response,
-                "Product deleted successfully",
-                "Product not found",
-                "Invalid product request",
-                "Storage limit exceeded"
-        );
+        return ResponseHelper.build(response, "Product deleted successfully");
     }
 }

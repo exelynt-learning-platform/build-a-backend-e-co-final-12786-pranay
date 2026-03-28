@@ -17,8 +17,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -47,6 +47,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<User> register(UserDto userDto) {
         User user = modelMapper.map(userDto, User.class);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));

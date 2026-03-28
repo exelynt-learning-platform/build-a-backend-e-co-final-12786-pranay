@@ -10,7 +10,6 @@ import com.service.backend_service.service.PaymentService;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +22,12 @@ class PaymentControllerTest {
     @Mock
     private PaymentService paymentService;
 
-    @InjectMocks
     private PaymentController paymentController;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        paymentController = new PaymentController(paymentService, "callback-token");
+    }
 
     @Test
     void checkoutReturnsCheckoutUrl() throws Exception {
@@ -41,8 +44,16 @@ class PaymentControllerTest {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(paymentController).build();
         when(paymentService.paymentSuccess(1L)).thenReturn(ResponseEntity.ok("Payment Successful"));
 
-        mockMvc.perform(get("/payment/success").param("orderId", "1"))
+        mockMvc.perform(get("/payment/success").param("orderId", "1").param("token", "callback-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value("Payment Successful"));
+    }
+
+    @Test
+    void paymentSuccessRejectsInvalidCallbackToken() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(paymentController).build();
+
+        mockMvc.perform(get("/payment/success").param("orderId", "1").param("token", "wrong-token"))
+                .andExpect(status().isUnauthorized());
     }
 }

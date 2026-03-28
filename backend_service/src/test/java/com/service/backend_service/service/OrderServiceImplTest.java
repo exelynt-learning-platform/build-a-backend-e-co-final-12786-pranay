@@ -17,6 +17,7 @@ import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
+import com.service.backend_service.service.StockValidationService;
 import com.service.backend_service.service.impl.OrderServiceImpl;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,9 @@ class OrderServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private StockValidationService stockValidationService;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -66,6 +70,7 @@ class OrderServiceImplTest {
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
         when(ordersRepository.save(any(Orders.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<Orders> response = orderService.addOrder(dto);
@@ -93,6 +98,8 @@ class OrderServiceImplTest {
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
         when(productRepository.findById(2L)).thenReturn(Optional.of(new Product()));
         when(userRepository.findById(3L)).thenReturn(Optional.of(new User()));
+        when(stockValidationService.hasSufficientStock(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(0)))
+                .thenReturn(false);
 
         ResponseEntity<Orders> response = orderService.addOrder(dto);
 
@@ -120,6 +127,7 @@ class OrderServiceImplTest {
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(stockValidationService.hasSufficientStock(product, 4)).thenReturn(false);
 
         ResponseEntity<Orders> response = orderService.addOrder(dto);
 
@@ -147,6 +155,7 @@ class OrderServiceImplTest {
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
 
         ResponseEntity<Orders> response = orderService.addOrder(dto);
 

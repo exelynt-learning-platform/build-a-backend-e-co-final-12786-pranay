@@ -38,7 +38,8 @@ class PaymentServiceImplTest {
                 orderRepo,
                 "http://localhost:8080/payment/success",
                 "http://localhost:8080/payment/cancel",
-                "usd"
+                "usd",
+                "callback-token"
         );
     }
 
@@ -95,8 +96,8 @@ class PaymentServiceImplTest {
             mocked.verify(() -> Session.create(paramsCaptor.capture()));
             SessionCreateParams params = paramsCaptor.getValue();
             assertEquals("usd", params.getLineItems().get(0).getPriceData().getCurrency());
-            assertEquals("http://localhost:8080/payment/success?orderId=1", params.getSuccessUrl());
-            assertEquals("http://localhost:8080/payment/cancel?orderId=1", params.getCancelUrl());
+            assertEquals("http://localhost:8080/payment/success?orderId=1&token=callback-token", params.getSuccessUrl());
+            assertEquals("http://localhost:8080/payment/cancel?orderId=1&token=callback-token", params.getCancelUrl());
         }
     }
 }

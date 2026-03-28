@@ -10,12 +10,15 @@ public class ApplicationPropertiesValidator {
 
     private final String datasourceUsername;
     private final String datasourcePassword;
+    private final String paymentCallbackToken;
 
     public ApplicationPropertiesValidator(
             @Value("${spring.datasource.username:}") String datasourceUsername,
-            @Value("${spring.datasource.password:}") String datasourcePassword) {
+            @Value("${spring.datasource.password:}") String datasourcePassword,
+            @Value("${payment.callback.token:}") String paymentCallbackToken) {
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
+        this.paymentCallbackToken = paymentCallbackToken;
     }
 
     @PostConstruct
@@ -25,6 +28,9 @@ public class ApplicationPropertiesValidator {
         }
         if (!StringUtils.hasText(datasourcePassword)) {
             throw new IllegalStateException("spring.datasource.password must be configured");
+        }
+        if (!StringUtils.hasText(paymentCallbackToken)) {
+            throw new IllegalStateException("payment.callback.token must be configured");
         }
     }
 }

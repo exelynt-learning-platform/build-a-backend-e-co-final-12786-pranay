@@ -14,6 +14,7 @@ import com.service.backend_service.model.User;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.impl.UserServiceImpl;
 import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.modelmapper.ModelMapper;
@@ -24,6 +25,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -115,5 +117,12 @@ class UserServiceImplTest {
 
         assertTrue(userDetails.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_USER".equals(authority.getAuthority())));
+    }
+
+    @Test
+    void registerIsTransactional() throws NoSuchMethodException {
+        Assertions.assertNotNull(
+                UserServiceImpl.class.getMethod("register", UserDto.class).getAnnotation(Transactional.class)
+        );
     }
 }

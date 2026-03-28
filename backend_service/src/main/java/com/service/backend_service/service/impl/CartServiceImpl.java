@@ -10,6 +10,7 @@ import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.CartService;
+import com.service.backend_service.service.StockValidationService;
 
 import java.util.List;
 
@@ -25,13 +26,16 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
 
     private final ProductRepository productRepository;
+    private final StockValidationService stockValidationService;
 
     public CartServiceImpl(CartRepository cartRepository,
                            UserRepository userRepository,
-                           ProductRepository productRepository) {
+                           ProductRepository productRepository,
+                           StockValidationService stockValidationService) {
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.stockValidationService = stockValidationService;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Product product = productRepository.findById(cartDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-        if (product.getStockQuantity() < cartDto.getQuantity()) {
+        if (!stockValidationService.hasSufficientStock(product, cartDto.getQuantity())) {
             return new ResponseEntity<>(HttpStatus.INSUFFICIENT_STORAGE);
         }
         Cart cart = new Cart();
@@ -129,10 +133,8 @@ public class CartServiceImpl implements CartService {
                         return ResponseEntity.badRequest().body("Selected product is not present in this cart");
                     }
 
-                    cart.setProduct(null);
-                    cart.setQuantity(0);
-                    cartRepository.save(cart);
-                    return ResponseEntity.ok("Product removed from cart successfully");
+                    cartRepository.delete(cart);
+                    return ResponseEntity.ok("Product removed from cart and cart deleted successfully");
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
