@@ -12,10 +12,10 @@ import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.service.impl.ProductServiceImpl;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.modelmapper.ModelMapper;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -25,24 +25,22 @@ import org.springframework.http.ResponseEntity;
 class ProductServiceImplTest {
 
     @Mock
-    private ModelMapper modelMapper;
-
-    @Mock
     private ProductRepository productRepository;
 
-    @InjectMocks
     private ProductServiceImpl productService;
+
+    @BeforeEach
+    void setUp() {
+        productService = new ProductServiceImpl(new ModelMapper(), productRepository);
+    }
 
     @Test
     void addProductSavesMappedEntity() {
         ProductDto dto = new ProductDto();
         dto.setName("Phone");
-        Product mapped = new Product();
-        mapped.setName("Phone");
         Product saved = new Product(1L, "Phone", "img", "desc", 4, 100.0);
 
-        when(modelMapper.map(dto, Product.class)).thenReturn(mapped);
-        when(productRepository.save(mapped)).thenReturn(saved);
+        when(productRepository.save(any(Product.class))).thenReturn(saved);
 
         ResponseEntity<Product> response = productService.addProduct(dto);
 

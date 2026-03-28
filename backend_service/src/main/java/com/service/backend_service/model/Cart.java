@@ -28,20 +28,24 @@ public class Cart {
     @JsonIgnore
     private User user;
 
+    @Column(name = "fk_user_id", insertable = false, updatable = false)
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_product_id", referencedColumnName = "id")
     @JsonIgnore
     private Product product;
 
+    @Column(name = "fk_product_id", insertable = false, updatable = false)
+    private Long productId;
+
     @JsonProperty("userId")
-    public Long getUserId() {
-        return user != null ? user.getId() : null;
+    public Long getResolvedUserId() {
+        return userId;
     }
 
     @JsonProperty("productId")
-    public Long getProductId() {
-        return product != null ? product.getId() : null;
+    public Long getResolvedProductId() {
+        return productId;
     }
-
-
 }

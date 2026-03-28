@@ -4,7 +4,7 @@ import com.service.backend_service.dto.OrderDto;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Cart;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.CartRepository;
@@ -12,8 +12,9 @@ import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.OrderService;
+import com.service.backend_service.service.PriceCalculationService;
 import com.service.backend_service.service.StockValidationService;
-
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,66 +30,99 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
 
     private final UserRepository userRepository;
+    private final PriceCalculationService priceCalculationService;
     private final StockValidationService stockValidationService;
 
     public OrderServiceImpl(OrdersRepository ordersRepository,
                             CartRepository cartRepository,
                             ProductRepository productRepository,
                             UserRepository userRepository,
+                            PriceCalculationService priceCalculationService,
                             StockValidationService stockValidationService) {
         this.ordersRepository = ordersRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.priceCalculationService = priceCalculationService;
         this.stockValidationService = stockValidationService;
     }
 
     @Override
-    public ResponseEntity<Orders> addOrder(OrderDto orderDto) {
+    public ResponseEntity<Order> addOrder(OrderDto orderDto) {
+        OrderCreationContext context = resolveOrderCreationContext(orderDto);
+        if (!isValidOrderRequest(orderDto, context)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (!stockValidationService.hasSufficientStock(context.product(), context.cartQuantity())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        BigDecimal calculatedTotalPrice =
+                priceCalculationService.calculateTotalPrice(context.cartQuantity(), context.product().getPrice());
+        if (!priceCalculationService.matchesExpectedTotal(orderDto.getTotalPrice(), calculatedTotalPrice)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Order order = buildOrder(orderDto, context, calculatedTotalPrice);
+        Order savedOrder = ordersRepository.save(order);
+        return ResponseEntity.ok(savedOrder);
+    }
+
+    private OrderCreationContext resolveOrderCreationContext(OrderDto orderDto) {
         Cart cart = cartRepository.findById(orderDto.getCartId())
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
         Product product = productRepository.findById(orderDto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         User user = userRepository.findById(orderDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        Integer cartQuantity = extractValidCartQuantity(cart);
+        return new OrderCreationContext(cart, product, user, cartQuantity);
+    }
 
-        if (!stockValidationService.hasSufficientStock(product, cart.getQuantity())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    private boolean isValidOrderRequest(OrderDto orderDto, OrderCreationContext context) {
+        return context.cartQuantity() != null
+                && context.product().getPrice() != null
+                && orderDto.getTotalQuantity() != null;
+    }
 
-        double calculatedTotalPrice = cart.getQuantity() * product.getPrice();
-        if (orderDto.getTotalPrice() == null || Math.abs(orderDto.getTotalPrice() - calculatedTotalPrice) > 0.01d) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        Orders order = new Orders();
+    private Order buildOrder(OrderDto orderDto, OrderCreationContext context, BigDecimal calculatedTotalPrice) {
+        Order order = new Order();
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setShippingDetails(orderDto.getShippingDetails());
         order.setTotalQuantity(orderDto.getTotalQuantity());
-        order.setTotalPrice(calculatedTotalPrice);
-        order.setCart(cart);
-        order.setProduct(product);
-        order.setUser(user);
+        order.setTotalPrice(calculatedTotalPrice.doubleValue());
+        order.setCart(context.cart());
+        order.setProduct(context.product());
+        order.setUser(context.user());
+        return order;
+    }
 
-        Orders savedOrder = ordersRepository.save(order);
-        return ResponseEntity.ok(savedOrder);
+    private Integer extractValidCartQuantity(Cart cart) {
+        if (cart == null || cart.getQuantity() == null || cart.getQuantity() <= 0) {
+            return null;
+        }
+        return cart.getQuantity();
+    }
+
+    private record OrderCreationContext(Cart cart, Product product, User user, Integer cartQuantity) {
     }
 
     @Override
-    public ResponseEntity<Orders> getOrder(Long orderId) {
+    public ResponseEntity<Order> getOrder(Long orderId) {
         return ordersRepository.findById(orderId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Override
-    public ResponseEntity<List<Orders>> getAllOrders() {
+    public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok(ordersRepository.findAll());
     }
 
     @Override
-    public ResponseEntity<Orders> updateOrder(Long orderId, OrderDto orderDto) {
+    public ResponseEntity<Order> updateOrder(Long orderId, OrderDto orderDto) {
         return ordersRepository.findById(orderId)
                 .map(existingOrder -> {
                     applyScalarUpdates(existingOrder, orderDto);
@@ -98,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    private void applyScalarUpdates(Orders existingOrder, OrderDto orderDto) {
+    private void applyScalarUpdates(Order existingOrder, OrderDto orderDto) {
         if (orderDto.getOrderStatus() != null) {
             existingOrder.setOrderStatus(orderDto.getOrderStatus());
         }
@@ -116,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void applyRelatedEntityUpdates(Orders existingOrder, OrderDto orderDto) {
+    private void applyRelatedEntityUpdates(Order existingOrder, OrderDto orderDto) {
         if (orderDto.getCartId() != null) {
             existingOrder.setCart(findCart(orderDto.getCartId()));
         }

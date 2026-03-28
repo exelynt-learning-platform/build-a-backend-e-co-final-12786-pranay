@@ -85,13 +85,17 @@ public class CartServiceImpl implements CartService {
 
     private Product resolveUpdatedProduct(Cart existingCart, CartDto cartDto) {
         if (cartDto.getProductId() == null) {
-            return existingCart.getProduct();
+            return getExistingProduct(existingCart);
         }
 
         Product updatedProduct = productRepository.findById(cartDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException("Product not found"));
         existingCart.setProduct(updatedProduct);
         return updatedProduct;
+    }
+
+    private Product getExistingProduct(Cart existingCart) {
+        return existingCart.getProduct();
     }
 
     private ResponseEntity<Cart> applyUpdatedQuantity(Cart existingCart, CartDto cartDto, Product product) {
@@ -102,12 +106,12 @@ public class CartServiceImpl implements CartService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        int existingQuantity = existingCart.getQuantity() == null ? 0 : existingCart.getQuantity();
-        int updatedQuantity = existingQuantity + cartDto.getQuantity();
-        if (updatedQuantity > product.getStockQuantity()) {
+        Integer existingQuantity = existingCart.getQuantity();
+        if (!stockValidationService.canIncreaseQuantity(product, existingQuantity, cartDto.getQuantity())) {
             return new ResponseEntity<>(HttpStatus.INSUFFICIENT_STORAGE);
         }
 
+        int updatedQuantity = (existingQuantity == null ? 0 : existingQuantity) + cartDto.getQuantity();
         existingCart.setQuantity(updatedQuantity);
         return null;
     }
@@ -126,10 +130,11 @@ public class CartServiceImpl implements CartService {
     public ResponseEntity<String> deleteCart(Long cartId, Long productId) {
         return cartRepository.findById(cartId)
                 .map(cart -> {
-                    if (cart.getProduct() == null) {
+                    Product cartProduct = cart.getProduct();
+                    if (cartProduct == null || cartProduct.getId() == null) {
                         return ResponseEntity.badRequest().body("No product found in cart");
                     }
-                    if (!cart.getProduct().getId().equals(productId)) {
+                    if (!cartProduct.getId().equals(productId)) {
                         return ResponseEntity.badRequest().body("Selected product is not present in this cart");
                     }
 

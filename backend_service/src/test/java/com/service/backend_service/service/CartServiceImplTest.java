@@ -77,6 +77,7 @@ class CartServiceImplTest {
         dto.setQuantity(2);
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(stockValidationService.canIncreaseQuantity(existing.getProduct(), 2, 2)).thenReturn(false);
 
         ResponseEntity<Cart> response = cartService.updateCart(1L, dto);
 
@@ -94,6 +95,7 @@ class CartServiceImplTest {
         dto.setQuantity(3);
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(stockValidationService.canIncreaseQuantity(existing.getProduct(), 2, 3)).thenReturn(true);
         when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<Cart> response = cartService.updateCart(1L, dto);
@@ -170,6 +172,20 @@ class CartServiceImplTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product removed from cart and cart deleted successfully", response.getBody());
         verify(cartRepository).delete(cart);
+    }
+
+    @Test
+    void deleteCartRejectsWhenCartProductIdIsMissing() {
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setProduct(new Product());
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+
+        ResponseEntity<String> response = cartService.deleteCart(1L, 10L);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("No product found in cart", response.getBody());
     }
 
     @Test

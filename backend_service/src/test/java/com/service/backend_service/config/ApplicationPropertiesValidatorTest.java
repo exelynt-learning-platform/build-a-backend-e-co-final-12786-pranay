@@ -9,28 +9,21 @@ class ApplicationPropertiesValidatorTest {
 
     @Test
     void validateRejectsMissingDatasourceUsername() {
-        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("", "secret", "callback-token");
+        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("", "secret");
 
         assertThrows(IllegalStateException.class, validator::validate);
     }
 
     @Test
     void validateRejectsMissingDatasourcePassword() {
-        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("user", "", "callback-token");
-
-        assertThrows(IllegalStateException.class, validator::validate);
-    }
-
-    @Test
-    void validateRejectsMissingPaymentCallbackToken() {
-        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("user", "secret", "");
+        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("user", "");
 
         assertThrows(IllegalStateException.class, validator::validate);
     }
 
     @Test
     void validateAcceptsConfiguredProperties() {
-        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("user", "secret", "callback-token");
+        ApplicationPropertiesValidator validator = new ApplicationPropertiesValidator("user", "secret");
 
         assertDoesNotThrow(validator::validate);
     }

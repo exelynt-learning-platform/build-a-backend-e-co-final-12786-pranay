@@ -16,21 +16,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final ResponseHelper responseHelper;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, ResponseHelper responseHelper) {
         this.userService = userService;
+        this.responseHelper = responseHelper;
     }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto userDto) {
         ResponseEntity<User> response = userService.register(userDto);
-        return ResponseHelper.build(response, "User registered successfully");
+        return responseHelper.build(response, "User registered successfully");
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody UserDto userDto) {
         ResponseEntity<LoginResponseDto> response = userService.login(userDto);
-        return ResponseHelper.build(response, "User logged in successfully");
+        return responseHelper.build(response, "User logged in successfully");
     }
 
 }

@@ -15,4 +15,16 @@ public class StockValidationServiceImpl implements StockValidationService {
                 && requestedQuantity > 0
                 && requestedQuantity <= product.getStockQuantity();
     }
+
+    @Override
+    public boolean canIncreaseQuantity(Product product, Integer existingQuantity, Integer requestedQuantityDelta) {
+        if (product == null
+                || product.getStockQuantity() == null
+                || requestedQuantityDelta == null
+                || requestedQuantityDelta <= 0) {
+            return false;
+        }
+        int currentQuantity = existingQuantity == null ? 0 : existingQuantity;
+        return currentQuantity + requestedQuantityDelta <= product.getStockQuantity();
+    }
 }

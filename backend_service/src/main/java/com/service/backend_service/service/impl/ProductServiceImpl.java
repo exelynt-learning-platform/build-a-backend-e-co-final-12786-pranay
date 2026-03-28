@@ -5,12 +5,16 @@ import com.service.backend_service.model.Product;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.service.ProductService;
 import java.util.List;
+import org.modelmapper.Condition;
+import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+    private static final Condition<?, ?> NOT_NULL = Conditions.isNotNull();
 
     private final ModelMapper modelMapper;
 
@@ -19,6 +23,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductServiceImpl(ModelMapper modelMapper, ProductRepository productRepository) {
         this.modelMapper = modelMapper;
         this.productRepository = productRepository;
+        configurePartialUpdateMapping(modelMapper);
     }
 
     @Override
@@ -44,25 +49,19 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<Product> updateProduct(Long productId, ProductDto productDto) {
         return productRepository.findById(productId)
                 .map(existingProduct -> {
-                    if (productDto.getName() != null) {
-                        existingProduct.setName(productDto.getName());
-                    }
-                    if (productDto.getImageUrl() != null) {
-                        existingProduct.setImageUrl(productDto.getImageUrl());
-                    }
-                    if (productDto.getDescription() != null) {
-                        existingProduct.setDescription(productDto.getDescription());
-                    }
-                    if (productDto.getStockQuantity() != null) {
-                        existingProduct.setStockQuantity(productDto.getStockQuantity());
-                    }
-                    if (productDto.getPrice() != null) {
-                        existingProduct.setPrice(productDto.getPrice());
-                    }
+                    modelMapper.map(productDto, existingProduct);
                     Product updatedProduct = productRepository.save(existingProduct);
                     return ResponseEntity.ok(updatedProduct);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private void configurePartialUpdateMapping(ModelMapper mapper) {
+        if (mapper.getTypeMap(ProductDto.class, Product.class) == null) {
+            mapper.createTypeMap(ProductDto.class, Product.class).setPropertyCondition(NOT_NULL);
+        } else {
+            mapper.getTypeMap(ProductDto.class, Product.class).setPropertyCondition(NOT_NULL);
+        }
     }
 
     @Override
