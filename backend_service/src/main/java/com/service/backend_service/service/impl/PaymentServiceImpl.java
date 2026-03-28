@@ -5,23 +5,29 @@ import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Orders;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.service.PaymentService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    @Autowired
-    private OrdersRepository orderRepo;
+    private final OrdersRepository orderRepo;
+    private final String successUrl;
+    private final String cancelUrl;
+
+    public PaymentServiceImpl(
+            OrdersRepository orderRepo,
+            @Value("${payment.success.url:http://localhost:8080/payment/success}") String successUrl,
+            @Value("${payment.cancel.url:http://localhost:8080/payment/cancel}") String cancelUrl) {
+        this.orderRepo = orderRepo;
+        this.successUrl = successUrl;
+        this.cancelUrl = cancelUrl;
+    }
 
     public ResponseEntity<Map<String, String>> createCheckoutSession(Long orderId) {
 
@@ -34,8 +40,8 @@ public class PaymentServiceImpl implements PaymentService {
             SessionCreateParams params =
                     SessionCreateParams.builder()
                             .setMode(SessionCreateParams.Mode.PAYMENT)
-                            .setSuccessUrl("http://localhost:8080/payment/success?orderId=" + order.getId())
-                            .setCancelUrl("http://localhost:8080/payment/cancel?orderId=" + order.getId())
+                            .setSuccessUrl(buildRedirectUrl(successUrl, order.getId()))
+                            .setCancelUrl(buildRedirectUrl(cancelUrl, order.getId()))
                             .addLineItem(
                                     SessionCreateParams.LineItem.builder()
                                             .setQuantity(order.getTotalQuantity().longValue())
@@ -65,6 +71,11 @@ public class PaymentServiceImpl implements PaymentService {
             // You can log it if needed
             throw new RuntimeException("Payment processing failed: " + e.getMessage());
         }
+    }
+
+    private String buildRedirectUrl(String baseUrl, Long orderId) {
+        String separator = baseUrl.contains("?") ? "&" : "?";
+        return baseUrl + separator + "orderId=" + orderId;
     }
 
     @Override

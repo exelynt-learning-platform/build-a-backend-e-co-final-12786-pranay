@@ -14,6 +14,7 @@ import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.impl.CartServiceImpl;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,6 +96,23 @@ class CartServiceImplTest {
     }
 
     @Test
+    void updateCartRejectsWhenProductStockIsMissing() {
+        Cart existing = new Cart();
+        existing.setId(1L);
+        existing.setQuantity(2);
+        existing.setProduct(new Product(10L, "Phone", "img", "desc", null, 100.0));
+
+        CartDto dto = new CartDto();
+        dto.setQuantity(1);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        ResponseEntity<Cart> response = cartService.updateCart(1L, dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void deleteCartRejectsWhenSelectedProductDoesNotMatch() {
         Cart cart = new Cart();
         cart.setId(1L);
@@ -112,13 +130,18 @@ class CartServiceImplTest {
     void deleteCartDeletesRowWhenProductMatches() {
         Cart cart = new Cart();
         cart.setId(1L);
-        cart.setProduct(new Product(10L, "Phone", "img", "desc", 10, 100.0));
+        Product product = new Product(10L, "Phone", "img", "desc", 10, 100.0);
+        cart.setProducts(new LinkedHashSet<>(java.util.Set.of(product)));
+        cart.setQuantity(1);
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<String> response = cartService.deleteCart(1L, 10L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(cartRepository).delete(cart);
+        assertEquals("Product removed from cart successfully", response.getBody());
+        assertEquals(0, cart.getQuantity());
+        verify(cartRepository).save(cart);
     }
 }

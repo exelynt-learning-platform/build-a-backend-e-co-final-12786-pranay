@@ -30,8 +30,16 @@ class PaymentServiceImplTest {
     @Mock
     private OrdersRepository orderRepo;
 
-    @InjectMocks
     private PaymentServiceImpl paymentService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        paymentService = new PaymentServiceImpl(
+                orderRepo,
+                "http://localhost:8080/payment/success",
+                "http://localhost:8080/payment/cancel"
+        );
+    }
 
     @Test
     void paymentSuccessUpdatesOrderState() {

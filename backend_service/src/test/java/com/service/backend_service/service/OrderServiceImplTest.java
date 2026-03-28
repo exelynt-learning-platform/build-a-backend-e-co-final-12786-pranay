@@ -73,6 +73,7 @@ class OrderServiceImplTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(OrderStatus.PENDING, response.getBody().getOrderStatus());
         assertEquals(PaymentStatus.PENDING, response.getBody().getPaymentStatus());
+        assertEquals(200.0, response.getBody().getTotalPrice());
     }
 
     @Test
@@ -95,7 +96,34 @@ class OrderServiceImplTest {
 
         ResponseEntity<Orders> response = orderService.addOrder(dto);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void addOrderRejectsCartQuantityAboveProductStock() {
+        OrderDto dto = new OrderDto();
+        dto.setCartId(1L);
+        dto.setProductId(2L);
+        dto.setUserId(3L);
+        dto.setShippingDetails("Pune");
+        dto.setTotalQuantity(4);
+        dto.setTotalPrice(400.0);
+
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setQuantity(4);
+        Product product = new Product(2L, "Phone", "img", "desc", 3, 100.0);
+        User user = new User();
+        user.setId(3L);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+
+        ResponseEntity<Orders> response = orderService.addOrder(dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
     }
 

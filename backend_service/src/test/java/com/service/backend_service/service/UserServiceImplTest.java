@@ -2,6 +2,7 @@ package com.service.backend_service.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -81,5 +83,20 @@ class UserServiceImplTest {
         assertEquals("token-123", response.getToken());
         assertNull(response.getPassword());
         verify(authenticationManager).authenticate(any());
+    }
+
+    @Test
+    void loginThrowsBadCredentialsWhenAuthenticationFails() throws Exception {
+        UserDto dto = new UserDto();
+        dto.setEmail("a@test.com");
+        dto.setPassword("wrong");
+
+        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("bad credentials"));
+
+        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> userService.login(dto));
+
+        assertEquals("Invalid username or password", exception.getMessage());
     }
 }
