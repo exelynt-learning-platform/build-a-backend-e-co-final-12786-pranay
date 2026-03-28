@@ -55,6 +55,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         double calculatedTotalPrice = cart.getQuantity() * product.getPrice();
+        if (orderDto.getTotalPrice() == null || Math.abs(orderDto.getTotalPrice() - calculatedTotalPrice) > 0.01d) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
 
         Orders order = new Orders();
         order.setOrderStatus(OrderStatus.PENDING);

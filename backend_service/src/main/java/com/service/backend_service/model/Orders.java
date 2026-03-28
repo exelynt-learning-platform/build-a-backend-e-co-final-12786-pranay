@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import jakarta.persistence.*;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,11 +22,11 @@ public class Orders {
     @Column(nullable = false)
     private Long id;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
     private OrderStatus orderStatus;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
 
@@ -47,14 +45,10 @@ public class Orders {
     @JsonIgnore
     private Cart cart;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "order_products",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_product_id", referencedColumnName = "id")
     @JsonIgnore
-    private Set<Product> products = new LinkedHashSet<>();
+    private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id",referencedColumnName = "id")
@@ -66,24 +60,16 @@ public class Orders {
         return cart != null ? cart.getId() : null;
     }
 
-    @Transient
     public Product getProduct() {
-        return products != null && !products.isEmpty() ? products.stream().findFirst().orElse(null) : null;
+        return product;
     }
 
     public void setProduct(Product product) {
-        if (products == null) {
-            products = new LinkedHashSet<>();
-        }
-        products.clear();
-        if (product != null) {
-            products.add(product);
-        }
+        this.product = product;
     }
 
     @JsonProperty("productId")
     public Long getProductId() {
-        Product product = getProduct();
         return product != null ? product.getId() : null;
     }
 
@@ -91,16 +77,5 @@ public class Orders {
     public Long getUserId() {
         return user != null ? user.getId() : null;
     }
-
-
-//    @Column(name = "fk_cart_id")
-//    private Long fk_cart_id;
-//
-//    @Column(name = "fk_user_id")
-//    private Long fk_user_id;
-//
-//    @Column(name = "fk_product_id")
-//    private Long fk_product_id;
-
 
 }

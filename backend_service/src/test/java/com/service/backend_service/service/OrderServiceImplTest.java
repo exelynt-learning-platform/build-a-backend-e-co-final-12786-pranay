@@ -128,6 +128,33 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void addOrderRejectsWhenProvidedTotalPriceDoesNotMatchCalculatedPrice() {
+        OrderDto dto = new OrderDto();
+        dto.setCartId(1L);
+        dto.setProductId(2L);
+        dto.setUserId(3L);
+        dto.setShippingDetails("Pune");
+        dto.setTotalQuantity(2);
+        dto.setTotalPrice(150.0);
+
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setQuantity(2);
+        Product product = new Product(2L, "Phone", "img", "desc", 10, 100.0);
+        User user = new User();
+        user.setId(3L);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+
+        ResponseEntity<Orders> response = orderService.addOrder(dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
     void getAllOrdersReturnsAllRows() {
         when(ordersRepository.findAll()).thenReturn(List.of(new Orders()));
 
