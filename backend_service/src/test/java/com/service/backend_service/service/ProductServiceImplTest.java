@@ -38,6 +38,10 @@ class ProductServiceImplTest {
     void addProductSavesMappedEntity() {
         ProductDto dto = new ProductDto();
         dto.setName("Phone");
+        dto.setImageUrl("img");
+        dto.setDescription("desc");
+        dto.setStockQuantity(4);
+        dto.setPrice(100.0);
         Product saved = new Product(1L, "Phone", "img", "desc", 4, 100.0);
 
         when(productRepository.save(any(Product.class))).thenReturn(saved);
@@ -94,5 +98,31 @@ class ProductServiceImplTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product deleted successfully", response.getBody());
         verify(productRepository).delete(product);
+    }
+
+    @Test
+    void addProductRejectsNegativePrice() {
+        ProductDto dto = new ProductDto();
+        dto.setName("Phone");
+        dto.setImageUrl("img");
+        dto.setDescription("desc");
+        dto.setStockQuantity(4);
+        dto.setPrice(-1.0);
+
+        ResponseEntity<Product> response = productService.addProduct(dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void updateProductRejectsNegativeStockQuantity() {
+        ProductDto dto = new ProductDto();
+        dto.setStockQuantity(-2);
+
+        ResponseEntity<Product> response = productService.updateProduct(1L, dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
     }
 }

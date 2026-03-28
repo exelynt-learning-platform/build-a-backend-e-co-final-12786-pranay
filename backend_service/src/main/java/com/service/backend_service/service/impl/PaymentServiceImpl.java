@@ -3,7 +3,7 @@ package com.service.backend_service.service.impl;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Order;
-import com.service.backend_service.repo.OrdersRepository;
+import com.service.backend_service.repo.OrderRepository;
 import com.service.backend_service.service.PaymentService;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -16,6 +16,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,7 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private static final String DEFAULT_PAYMENT_PRODUCT_NAME = "Order Payment";
 
-    private final OrdersRepository orderRepo;
+    private final OrderRepository orderRepo;
     private final String successUrl;
     private final String cancelUrl;
     private final String currency;
@@ -33,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final Map<String, CallbackContext> callbackContexts = new ConcurrentHashMap<>();
 
     public PaymentServiceImpl(
-            OrdersRepository orderRepo,
+            OrderRepository orderRepo,
             @Value("${payment.success.url:http://localhost:8080/payment/success}") String successUrl,
             @Value("${payment.cancel.url:http://localhost:8080/payment/cancel}") String cancelUrl,
             @Value("${payment.currency:inr}") String currency,
@@ -124,6 +125,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String registerCallback(Long orderId) {
+        cleanupExpiredCallbacks();
         String callbackId = UUID.randomUUID().toString();
         callbackContexts.put(callbackId, new CallbackContext(orderId, Instant.now().plus(callbackTtlMinutes, ChronoUnit.MINUTES)));
         return callbackId;
@@ -136,6 +138,12 @@ public class PaymentServiceImpl implements PaymentService {
         }
         return orderRepo.findById(callbackContext.orderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    @Scheduled(fixedDelayString = "${payment.callback.cleanup-interval-ms:300000}")
+    void cleanupExpiredCallbacks() {
+        Instant now = Instant.now();
+        callbackContexts.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
     }
 
     private record CallbackContext(Long orderId, Instant expiresAt) {

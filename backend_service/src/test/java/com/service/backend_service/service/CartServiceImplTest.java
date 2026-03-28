@@ -151,7 +151,7 @@ class CartServiceImplTest {
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
 
-        ResponseEntity<String> response = cartService.deleteCart(1L, 11L);
+        ResponseEntity<String> response = cartService.deleteCartItem(1L, 11L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Selected product is not present in this cart", response.getBody());
@@ -167,7 +167,7 @@ class CartServiceImplTest {
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
 
-        ResponseEntity<String> response = cartService.deleteCart(1L, 10L);
+        ResponseEntity<String> response = cartService.deleteCartItem(1L, 10L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product removed from cart and cart deleted successfully", response.getBody());
@@ -182,7 +182,7 @@ class CartServiceImplTest {
 
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
 
-        ResponseEntity<String> response = cartService.deleteCart(1L, 10L);
+        ResponseEntity<String> response = cartService.deleteCartItem(1L, 10L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("No product found in cart", response.getBody());

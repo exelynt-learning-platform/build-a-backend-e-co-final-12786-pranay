@@ -70,7 +70,7 @@ class CartControllerTest {
     @Test
     void deleteCartReturnsServiceMessage() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(cartController).build();
-        when(cartService.deleteCart(1L, 3L)).thenReturn(ResponseEntity.ok("Product removed from cart and cart deleted successfully"));
+        when(cartService.deleteCartItem(1L, 3L)).thenReturn(ResponseEntity.ok("Product removed from cart and cart deleted successfully"));
 
         mockMvc.perform(delete("/carts/delete/1/3"))
                 .andExpect(status().isOk())
