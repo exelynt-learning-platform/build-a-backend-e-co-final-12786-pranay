@@ -3,6 +3,7 @@ package com.service.backend_service.model;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
@@ -21,7 +22,7 @@ class EntityRelationshipTest {
 
     @Test
     void ordersGetProductReturnsNullWhenProductIsMissing() {
-        Orders order = new Orders();
+        Order order = new Order();
 
         assertNull(order.getProduct());
     }
@@ -35,7 +36,7 @@ class EntityRelationshipTest {
 
     @Test
     void ordersUsesManyToOneRelationshipForCart() throws NoSuchFieldException {
-        Field cartField = Orders.class.getDeclaredField("cart");
+        Field cartField = Order.class.getDeclaredField("cart");
 
         assertTrue(cartField.isAnnotationPresent(ManyToOne.class));
     }
@@ -56,19 +57,39 @@ class EntityRelationshipTest {
 
     @Test
     void ordersUsesManyToOneRelationshipForProduct() throws NoSuchFieldException {
-        Field productField = Orders.class.getDeclaredField("product");
+        Field productField = Order.class.getDeclaredField("product");
 
         assertTrue(productField.isAnnotationPresent(ManyToOne.class));
     }
 
     @Test
     void ordersUsesStringEnumMappingForStatuses() throws NoSuchFieldException {
-        Field orderStatusField = Orders.class.getDeclaredField("orderStatus");
-        Field paymentStatusField = Orders.class.getDeclaredField("paymentStatus");
+        Field orderStatusField = Order.class.getDeclaredField("orderStatus");
+        Field paymentStatusField = Order.class.getDeclaredField("paymentStatus");
 
         assertTrue(orderStatusField.isAnnotationPresent(Enumerated.class));
         assertTrue(paymentStatusField.isAnnotationPresent(Enumerated.class));
         assertTrue(orderStatusField.getAnnotation(Enumerated.class).value() == EnumType.STRING);
         assertTrue(paymentStatusField.getAnnotation(Enumerated.class).value() == EnumType.STRING);
+    }
+
+    @Test
+    void cartStoresRelationshipIdsWithoutTouchingLazyAssociations() throws NoSuchFieldException, NoSuchMethodException {
+        Field userIdField = Cart.class.getDeclaredField("userId");
+        Field productIdField = Cart.class.getDeclaredField("productId");
+
+        assertTrue(userIdField.isAnnotationPresent(jakarta.persistence.Column.class));
+        assertTrue(productIdField.isAnnotationPresent(jakarta.persistence.Column.class));
+        assertTrue(Cart.class.getDeclaredMethod("getResolvedUserId").isAnnotationPresent(JsonProperty.class));
+        assertTrue(Cart.class.getDeclaredMethod("getResolvedProductId").isAnnotationPresent(JsonProperty.class));
+    }
+
+    @Test
+    void userPasswordIsWriteOnlyForJson() throws NoSuchFieldException {
+        Field passwordField = User.class.getDeclaredField("password");
+        JsonProperty jsonProperty = passwordField.getAnnotation(JsonProperty.class);
+
+        assertTrue(jsonProperty != null);
+        assertTrue(jsonProperty.access() == JsonProperty.Access.WRITE_ONLY);
     }
 }

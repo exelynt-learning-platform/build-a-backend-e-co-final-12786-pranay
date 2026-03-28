@@ -26,7 +26,7 @@ class PaymentControllerTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        paymentController = new PaymentController(paymentService, "callback-token");
+        paymentController = new PaymentController(paymentService);
     }
 
     @Test
@@ -42,18 +42,21 @@ class PaymentControllerTest {
     @Test
     void paymentSuccessReturnsMessage() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(paymentController).build();
-        when(paymentService.paymentSuccess(1L)).thenReturn(ResponseEntity.ok("Payment Successful"));
+        when(paymentService.paymentSuccess("callback-123")).thenReturn(ResponseEntity.ok("Payment Successful"));
 
-        mockMvc.perform(get("/payment/success").param("orderId", "1").param("token", "callback-token"))
+        mockMvc.perform(get("/payment/success").param("callbackId", "callback-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value("Payment Successful"));
     }
 
     @Test
-    void paymentSuccessRejectsInvalidCallbackToken() throws Exception {
+    void paymentSuccessReturnsUnauthorizedForInvalidCallbackId() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(paymentController).build();
+        when(paymentService.paymentSuccess("expired-callback"))
+                .thenReturn(ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                        .body("Invalid or expired payment callback"));
 
-        mockMvc.perform(get("/payment/success").param("orderId", "1").param("token", "wrong-token"))
+        mockMvc.perform(get("/payment/success").param("callbackId", "expired-callback"))
                 .andExpect(status().isUnauthorized());
     }
 }

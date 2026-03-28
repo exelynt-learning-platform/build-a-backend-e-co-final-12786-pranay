@@ -6,11 +6,12 @@ import com.service.backend_service.dto.UserDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.UserService;
+import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,8 +19,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -32,18 +31,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final JwtUtil jwtUtil;
 
-    private final AuthenticationConfiguration authenticationConfiguration;
+    private final AuthenticationManager authenticationManager;
 
     public UserServiceImpl(ModelMapper modelMapper,
                            UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,
                            JwtUtil jwtUtil,
-                           AuthenticationConfiguration authenticationConfiguration) {
+                           AuthenticationManager authenticationManager) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtUtil = jwtUtil;
-        this.authenticationConfiguration = authenticationConfiguration;
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -67,7 +66,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private void authenticate(String username, String password) {
         try {
-            authenticationConfiguration.getAuthenticationManager().authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 

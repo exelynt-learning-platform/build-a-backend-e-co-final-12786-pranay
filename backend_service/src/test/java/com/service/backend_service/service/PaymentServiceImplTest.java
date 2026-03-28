@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.service.impl.PaymentServiceImpl;
 import com.stripe.model.checkout.Session;
@@ -39,17 +39,22 @@ class PaymentServiceImplTest {
                 "http://localhost:8080/payment/success",
                 "http://localhost:8080/payment/cancel",
                 "usd",
-                "callback-token"
+                "Stripe Order Payment",
+                15
         );
     }
 
     @Test
     void paymentSuccessUpdatesOrderState() {
-        Orders order = new Orders();
+        Order order = new Order();
         order.setId(1L);
+        order.setTotalQuantity(1);
+        order.setTotalPrice(10.0);
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
-        ResponseEntity<String> response = paymentService.paymentSuccess(1L);
+        String callbackId = registerCallbackForOrder(order, true);
+
+        ResponseEntity<String> response = paymentService.paymentSuccess(callbackId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(OrderStatus.CONFIRMED, order.getOrderStatus());
@@ -59,11 +64,12 @@ class PaymentServiceImplTest {
 
     @Test
     void paymentCancelUpdatesOrderState() {
-        Orders order = new Orders();
+        Order order = new Order();
         order.setId(1L);
         when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
-        ResponseEntity<String> response = paymentService.paymentCancel(1L);
+        String callbackId = registerCallbackForOrder(order, false);
+        ResponseEntity<String> response = paymentService.paymentCancel(callbackId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(OrderStatus.CANCELLED, order.getOrderStatus());
@@ -73,7 +79,7 @@ class PaymentServiceImplTest {
 
     @Test
     void createCheckoutSessionReturnsCheckoutUrl() throws Exception {
-        Orders order = new Orders();
+        Order order = new Order();
         order.setId(1L);
         order.setTotalQuantity(2);
         order.setTotalPrice(100.0);
@@ -96,8 +102,49 @@ class PaymentServiceImplTest {
             mocked.verify(() -> Session.create(paramsCaptor.capture()));
             SessionCreateParams params = paramsCaptor.getValue();
             assertEquals("usd", params.getLineItems().get(0).getPriceData().getCurrency());
-            assertEquals("http://localhost:8080/payment/success?orderId=1&token=callback-token", params.getSuccessUrl());
-            assertEquals("http://localhost:8080/payment/cancel?orderId=1&token=callback-token", params.getCancelUrl());
+            assertEquals("Stripe Order Payment", params.getLineItems().get(0).getPriceData().getProductData().getName());
+            assertTrue(params.getSuccessUrl().startsWith("http://localhost:8080/payment/success?callbackId="));
+            assertTrue(params.getCancelUrl().startsWith("http://localhost:8080/payment/cancel?callbackId="));
+            assertTrue(extractCallbackId(params.getSuccessUrl()).matches("^[0-9a-f\\-]{36}$"));
+            assertTrue(extractCallbackId(params.getCancelUrl()).matches("^[0-9a-f\\-]{36}$"));
         }
+    }
+
+    @Test
+    void paymentSuccessRejectsUnknownCallbackId() {
+        ResponseEntity<String> response = paymentService.paymentSuccess("missing-callback");
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Invalid or expired payment callback", response.getBody());
+    }
+
+    private String registerCallbackForOrder(Order order, boolean successCallback) {
+        order.setTotalQuantity(1);
+        order.setTotalPrice(10.0);
+        when(orderRepo.findById(order.getId())).thenReturn(Optional.of(order));
+
+        try (MockedStatic<Session> mocked = mockStatic(Session.class)) {
+            Session session = new Session();
+            session.setUrl("http://checkout");
+            ArgumentCaptor<SessionCreateParams> paramsCaptor = ArgumentCaptor.forClass(SessionCreateParams.class);
+            mocked.when(() -> Session.create(org.mockito.ArgumentMatchers.any(SessionCreateParams.class)))
+                    .thenReturn(session);
+            paymentService.createCheckoutSession(order.getId());
+            mocked.verify(() -> Session.create(paramsCaptor.capture()));
+            String url = successCallback ? paramsCaptor.getValue().getSuccessUrl() : paramsCaptor.getValue().getCancelUrl();
+            return extractCallbackId(url);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String captureCallbackIdFromCheckoutUrl(Order order, boolean successCallback) {
+        return registerCallbackForOrder(order, successCallback);
+    }
+
+    private String extractCallbackId(String url) {
+        String prefix = "callbackId=";
+        int start = url.indexOf(prefix);
+        return url.substring(start + prefix.length());
     }
 }

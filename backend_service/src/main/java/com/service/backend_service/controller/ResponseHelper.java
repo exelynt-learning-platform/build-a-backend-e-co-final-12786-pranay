@@ -1,21 +1,23 @@
 package com.service.backend_service.controller;
 
 import com.service.backend_service.dto.ApiResponse;
+import java.util.Locale;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
-public final class ResponseHelper {
+@Component
+public class ResponseHelper {
 
-    private static final String REQUEST_FAILED_MESSAGE = "Request failed";
-    private static final String NOT_FOUND_MESSAGE = "Resource not found";
-    private static final String BAD_REQUEST_MESSAGE = "Invalid request";
-    private static final String INSUFFICIENT_STORAGE_MESSAGE = "Requested quantity is unavailable";
+    private final MessageSource messageSource;
 
-    private ResponseHelper() {
+    public ResponseHelper(MessageSource messageSource) {
+        this.messageSource = messageSource;
     }
 
-    public static <T> ResponseEntity<ApiResponse<T>> build(ResponseEntity<T> serviceResponse,
-                                                           String successMessage) {
+    public <T> ResponseEntity<ApiResponse<T>> build(ResponseEntity<T> serviceResponse,
+                                                    String successMessage) {
         HttpStatus status = HttpStatus.valueOf(serviceResponse.getStatusCode().value());
         T body = serviceResponse.getBody();
 
@@ -30,13 +32,13 @@ public final class ResponseHelper {
 
         String message;
         if (status == HttpStatus.NOT_FOUND) {
-            message = NOT_FOUND_MESSAGE;
+            message = message("response.not_found");
         } else if (status == HttpStatus.BAD_REQUEST) {
-            message = BAD_REQUEST_MESSAGE;
+            message = message("response.bad_request");
         } else if (status == HttpStatus.INSUFFICIENT_STORAGE) {
-            message = INSUFFICIENT_STORAGE_MESSAGE;
+            message = message("response.insufficient_storage");
         } else {
-            message = REQUEST_FAILED_MESSAGE;
+            message = message("response.request_failed");
         }
 
         if (body instanceof String stringBody && !stringBody.isBlank()) {
@@ -44,5 +46,9 @@ public final class ResponseHelper {
         }
 
         return ResponseEntity.status(status).body(new ApiResponse<>(false, message, null));
+    }
+
+    private String message(String code) {
+        return messageSource.getMessage(code, null, Locale.getDefault());
     }
 }

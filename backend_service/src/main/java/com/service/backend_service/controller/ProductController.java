@@ -21,39 +21,41 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
     private final ProductService productService;
+    private final ResponseHelper responseHelper;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ResponseHelper responseHelper) {
         this.productService = productService;
+        this.responseHelper = responseHelper;
     }
 
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<Product>> addProduct(@Valid @RequestBody ProductDto productDto) {
         ResponseEntity<Product> response = productService.addProduct(productDto);
-        return ResponseHelper.build(response, "Product added successfully");
+        return responseHelper.build(response, "Product added successfully");
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse<Product>> getProduct(@PathVariable Long productId) {
         ResponseEntity<Product> response = productService.getProduct(productId);
-        return ResponseHelper.build(response, "Product fetched successfully");
+        return responseHelper.build(response, "Product fetched successfully");
     }
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
         ResponseEntity<List<Product>> response = productService.getAllProducts();
-        return ResponseHelper.build(response, "Products fetched successfully");
+        return responseHelper.build(response, "Products fetched successfully");
     }
 
     @PutMapping("/update/{productId}")
     public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long productId,
                                                                @RequestBody ProductDto productDto) {
         ResponseEntity<Product> response = productService.updateProduct(productId, productDto);
-        return ResponseHelper.build(response, "Product updated successfully");
+        return responseHelper.build(response, "Product updated successfully");
     }
 
     @DeleteMapping("/delete/{productId}")
     public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long productId) {
         ResponseEntity<String> response = productService.deleteProduct(productId);
-        return ResponseHelper.build(response, "Product deleted successfully");
+        return responseHelper.build(response, "Product deleted successfully");
     }
 }

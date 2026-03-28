@@ -10,14 +10,14 @@ import com.service.backend_service.dto.OrderDto;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Cart;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.CartRepository;
 import com.service.backend_service.repo.OrdersRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
-import com.service.backend_service.service.StockValidationService;
+import com.service.backend_service.service.PriceCalculationService;
 import com.service.backend_service.service.impl.OrderServiceImpl;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +43,9 @@ class OrderServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PriceCalculationService priceCalculationService;
 
     @Mock
     private StockValidationService stockValidationService;
@@ -71,9 +74,11 @@ class OrderServiceImplTest {
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
         when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
-        when(ordersRepository.save(any(Orders.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(priceCalculationService.calculateTotalPrice(2, 100.0)).thenReturn(new java.math.BigDecimal("200.00"));
+        when(priceCalculationService.matchesExpectedTotal(200.0, new java.math.BigDecimal("200.00"))).thenReturn(true);
+        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<Orders> response = orderService.addOrder(dto);
+        ResponseEntity<Order> response = orderService.addOrder(dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(OrderStatus.PENDING, response.getBody().getOrderStatus());
@@ -98,10 +103,8 @@ class OrderServiceImplTest {
         when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
         when(productRepository.findById(2L)).thenReturn(Optional.of(new Product()));
         when(userRepository.findById(3L)).thenReturn(Optional.of(new User()));
-        when(stockValidationService.hasSufficientStock(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(0)))
-                .thenReturn(false);
 
-        ResponseEntity<Orders> response = orderService.addOrder(dto);
+        ResponseEntity<Order> response = orderService.addOrder(dto);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
@@ -129,7 +132,34 @@ class OrderServiceImplTest {
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
         when(stockValidationService.hasSufficientStock(product, 4)).thenReturn(false);
 
-        ResponseEntity<Orders> response = orderService.addOrder(dto);
+        ResponseEntity<Order> response = orderService.addOrder(dto);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void addOrderRejectsWhenProductPriceIsMissing() {
+        OrderDto dto = new OrderDto();
+        dto.setCartId(1L);
+        dto.setProductId(2L);
+        dto.setUserId(3L);
+        dto.setShippingDetails("Pune");
+        dto.setTotalQuantity(2);
+        dto.setTotalPrice(200.0);
+
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setQuantity(2);
+        Product product = new Product(2L, "Phone", "img", "desc", 10, null);
+        User user = new User();
+        user.setId(3L);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+
+        ResponseEntity<Order> response = orderService.addOrder(dto);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
@@ -156,25 +186,58 @@ class OrderServiceImplTest {
         when(productRepository.findById(2L)).thenReturn(Optional.of(product));
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
         when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
+        when(priceCalculationService.calculateTotalPrice(2, 100.0)).thenReturn(new java.math.BigDecimal("200.00"));
+        when(priceCalculationService.matchesExpectedTotal(150.0, new java.math.BigDecimal("200.00"))).thenReturn(false);
 
-        ResponseEntity<Orders> response = orderService.addOrder(dto);
+        ResponseEntity<Order> response = orderService.addOrder(dto);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
     }
 
     @Test
-    void getAllOrdersReturnsAllRows() {
-        when(ordersRepository.findAll()).thenReturn(List.of(new Orders()));
+    void addOrderAcceptsRoundedCurrencyEquivalentTotalPrice() {
+        OrderDto dto = new OrderDto();
+        dto.setCartId(1L);
+        dto.setProductId(2L);
+        dto.setUserId(3L);
+        dto.setShippingDetails("Pune");
+        dto.setTotalQuantity(3);
+        dto.setTotalPrice(29.97);
 
-        ResponseEntity<List<Orders>> response = orderService.getAllOrders();
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setQuantity(3);
+        Product product = new Product(2L, "Phone", "img", "desc", 10, 9.99);
+        User user = new User();
+        user.setId(3L);
+
+        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(stockValidationService.hasSufficientStock(product, 3)).thenReturn(true);
+        when(priceCalculationService.calculateTotalPrice(3, 9.99)).thenReturn(new java.math.BigDecimal("29.97"));
+        when(priceCalculationService.matchesExpectedTotal(29.97, new java.math.BigDecimal("29.97"))).thenReturn(true);
+        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ResponseEntity<Order> response = orderService.addOrder(dto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(29.97, response.getBody().getTotalPrice());
+    }
+
+    @Test
+    void getAllOrdersReturnsAllRows() {
+        when(ordersRepository.findAll()).thenReturn(List.of(new Order()));
+
+        ResponseEntity<List<Order>> response = orderService.getAllOrders();
 
         assertEquals(1, response.getBody().size());
     }
 
     @Test
     void updateOrderUpdatesProvidedFields() {
-        Orders existing = new Orders();
+        Order existing = new Order();
         existing.setId(1L);
         existing.setShippingDetails("Old");
 
@@ -182,9 +245,9 @@ class OrderServiceImplTest {
         dto.setShippingDetails("New");
 
         when(ordersRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(ordersRepository.save(any(Orders.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<Orders> response = orderService.updateOrder(1L, dto);
+        ResponseEntity<Order> response = orderService.updateOrder(1L, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("New", response.getBody().getShippingDetails());
@@ -192,7 +255,7 @@ class OrderServiceImplTest {
 
     @Test
     void deleteOrderDeletesEntity() {
-        Orders order = new Orders();
+        Order order = new Order();
         order.setId(1L);
         when(ordersRepository.findById(1L)).thenReturn(Optional.of(order));
 

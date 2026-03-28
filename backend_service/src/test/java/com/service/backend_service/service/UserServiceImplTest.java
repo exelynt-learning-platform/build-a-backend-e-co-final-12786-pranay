@@ -23,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,9 +40,6 @@ class UserServiceImplTest {
 
     @Mock
     private JwtUtil jwtUtil;
-
-    @Mock
-    private AuthenticationConfiguration authenticationConfiguration;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -79,7 +75,6 @@ class UserServiceImplTest {
         dto.setEmail("a@test.com");
         dto.setPassword("plain");
 
-        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
         when(jwtUtil.generateToken("a@test.com")).thenReturn("token-123");
 
         LoginResponseDto response = userService.login(dto).getBody();
@@ -95,7 +90,6 @@ class UserServiceImplTest {
         dto.setEmail("a@test.com");
         dto.setPassword("wrong");
 
-        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("bad credentials"));
 

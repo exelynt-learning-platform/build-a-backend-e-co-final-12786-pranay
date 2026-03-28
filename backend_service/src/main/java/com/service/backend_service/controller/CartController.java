@@ -21,40 +21,42 @@ import org.springframework.web.bind.annotation.RestController;
 public class CartController {
 
     private final CartService cartService;
+    private final ResponseHelper responseHelper;
 
-    public CartController(CartService cartService) {
+    public CartController(CartService cartService, ResponseHelper responseHelper) {
         this.cartService = cartService;
+        this.responseHelper = responseHelper;
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse<Cart>> addCart(@Valid @RequestBody CartDto cartDto) {
+    public ResponseEntity<ApiResponse<Cart>> createCart(@Valid @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.addCart(cartDto);
-        return ResponseHelper.build(response, "Cart created successfully");
+        return responseHelper.build(response, "Cart created successfully");
     }
 
     @GetMapping("/{cartId}")
     public ResponseEntity<ApiResponse<Cart>> getCart(@PathVariable Long cartId) {
         ResponseEntity<Cart> response = cartService.getCart(cartId);
-        return ResponseHelper.build(response, "Cart fetched successfully");
+        return responseHelper.build(response, "Cart fetched successfully");
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<Cart>>> getAllCarts() {
+    public ResponseEntity<ApiResponse<List<Cart>>> listCarts() {
         ResponseEntity<List<Cart>> response = cartService.getAllCarts();
-        return ResponseHelper.build(response, "Carts fetched successfully");
+        return responseHelper.build(response, "Carts fetched successfully");
     }
 
     @PutMapping("/update/{cartId}")
     public ResponseEntity<ApiResponse<Cart>> updateCart(@PathVariable Long cartId,
                                                          @RequestBody CartDto cartDto) {
         ResponseEntity<Cart> response = cartService.updateCart(cartId, cartDto);
-        return ResponseHelper.build(response, "Cart updated successfully");
+        return responseHelper.build(response, "Cart updated successfully");
     }
 
     @DeleteMapping("/delete/{cartId}/{productId}")
-    public ResponseEntity<ApiResponse<String>> deleteCart(@PathVariable Long cartId,
-                                                           @PathVariable Long productId) {
+    public ResponseEntity<ApiResponse<String>> deleteCartItem(@PathVariable Long cartId,
+                                                              @PathVariable Long productId) {
         ResponseEntity<String> response = cartService.deleteCart(cartId, productId);
-        return ResponseHelper.build(response, "Cart deleted successfully");
+        return responseHelper.build(response, "Cart deleted successfully");
     }
 }

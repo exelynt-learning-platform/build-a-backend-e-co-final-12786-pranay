@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.service.backend_service.dto.LoginResponseDto;
 import com.service.backend_service.model.User;
 import com.service.backend_service.service.UserService;
+import org.springframework.context.support.StaticMessageSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,17 @@ class UserControllerTest {
     @Mock
     private UserService userService;
 
-    @InjectMocks
     private UserController userController;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        StaticMessageSource messageSource = new StaticMessageSource();
+        messageSource.addMessage("response.request_failed", java.util.Locale.getDefault(), "Request failed");
+        messageSource.addMessage("response.not_found", java.util.Locale.getDefault(), "Resource not found");
+        messageSource.addMessage("response.bad_request", java.util.Locale.getDefault(), "Invalid request");
+        messageSource.addMessage("response.insufficient_storage", java.util.Locale.getDefault(), "Requested quantity is unavailable");
+        userController = new UserController(userService, new ResponseHelper(messageSource));
+    }
 
     @Test
     void registerReturnsWrappedResponse() throws Exception {

@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table
+@Table(name = "orders")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Orders {
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(nullable = false)

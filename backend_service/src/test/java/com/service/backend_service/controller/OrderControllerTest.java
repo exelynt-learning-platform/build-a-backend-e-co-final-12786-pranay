@@ -6,11 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.service.OrderService;
+import org.springframework.context.support.StaticMessageSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +23,22 @@ class OrderControllerTest {
     @Mock
     private OrderService orderService;
 
-    @InjectMocks
     private OrderController orderController;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        StaticMessageSource messageSource = new StaticMessageSource();
+        messageSource.addMessage("response.request_failed", java.util.Locale.getDefault(), "Request failed");
+        messageSource.addMessage("response.not_found", java.util.Locale.getDefault(), "Resource not found");
+        messageSource.addMessage("response.bad_request", java.util.Locale.getDefault(), "Invalid request");
+        messageSource.addMessage("response.insufficient_storage", java.util.Locale.getDefault(), "Requested quantity is unavailable");
+        orderController = new OrderController(orderService, new ResponseHelper(messageSource));
+    }
 
     @Test
     void addOrderReturnsWrappedResponse() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
-        Orders order = new Orders();
+        Order order = new Order();
         order.setId(1L);
         when(orderService.addOrder(org.mockito.ArgumentMatchers.any())).thenReturn(ResponseEntity.ok(order));
 
