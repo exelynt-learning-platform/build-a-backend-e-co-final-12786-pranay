@@ -59,7 +59,6 @@ public class ProductServiceImpl implements ProductService {
                     if (productDto.getPrice() != null) {
                         existingProduct.setPrice(productDto.getPrice());
                     }
-
                     Product updatedProduct = productRepository.save(existingProduct);
                     return ResponseEntity.ok(updatedProduct);
                 })
