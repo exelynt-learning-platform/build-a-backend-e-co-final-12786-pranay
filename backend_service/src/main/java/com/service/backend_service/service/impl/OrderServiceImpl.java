@@ -4,7 +4,7 @@ import com.service.backend_service.dto.OrderDto;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Cart;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.CartRepository;
@@ -44,7 +44,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ResponseEntity<Orders> addOrder(OrderDto orderDto) {
+    public ResponseEntity<Order> addOrder(OrderDto orderDto) {
         Cart cart = cartRepository.findById(orderDto.getCartId())
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
         Product product = productRepository.findById(orderDto.getProductId())
@@ -52,16 +52,21 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(orderDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!stockValidationService.hasSufficientStock(product, cart.getQuantity())) {
+        Integer cartQuantity = extractValidCartQuantity(cart);
+        if (cartQuantity == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        double calculatedTotalPrice = cart.getQuantity() * product.getPrice();
+        if (!stockValidationService.hasSufficientStock(product, cartQuantity)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        double calculatedTotalPrice = cartQuantity * product.getPrice();
         if (orderDto.getTotalPrice() == null || Math.abs(orderDto.getTotalPrice() - calculatedTotalPrice) > 0.01d) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Orders order = new Orders();
+        Order order = new Order();
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setShippingDetails(orderDto.getShippingDetails());
@@ -71,24 +76,31 @@ public class OrderServiceImpl implements OrderService {
         order.setProduct(product);
         order.setUser(user);
 
-        Orders savedOrder = ordersRepository.save(order);
+        Order savedOrder = ordersRepository.save(order);
         return ResponseEntity.ok(savedOrder);
     }
 
+    private Integer extractValidCartQuantity(Cart cart) {
+        if (cart == null || cart.getQuantity() == null || cart.getQuantity() <= 0) {
+            return null;
+        }
+        return cart.getQuantity();
+    }
+
     @Override
-    public ResponseEntity<Orders> getOrder(Long orderId) {
+    public ResponseEntity<Order> getOrder(Long orderId) {
         return ordersRepository.findById(orderId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Override
-    public ResponseEntity<List<Orders>> getAllOrders() {
+    public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok(ordersRepository.findAll());
     }
 
     @Override
-    public ResponseEntity<Orders> updateOrder(Long orderId, OrderDto orderDto) {
+    public ResponseEntity<Order> updateOrder(Long orderId, OrderDto orderDto) {
         return ordersRepository.findById(orderId)
                 .map(existingOrder -> {
                     applyScalarUpdates(existingOrder, orderDto);
@@ -98,7 +110,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    private void applyScalarUpdates(Orders existingOrder, OrderDto orderDto) {
+    private void applyScalarUpdates(Order existingOrder, OrderDto orderDto) {
         if (orderDto.getOrderStatus() != null) {
             existingOrder.setOrderStatus(orderDto.getOrderStatus());
         }
@@ -116,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void applyRelatedEntityUpdates(Orders existingOrder, OrderDto orderDto) {
+    private void applyRelatedEntityUpdates(Order existingOrder, OrderDto orderDto) {
         if (orderDto.getCartId() != null) {
             existingOrder.setCart(findCart(orderDto.getCartId()));
         }
