@@ -8,7 +8,7 @@ import com.service.backend_service.model.Order;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.CartRepository;
-import com.service.backend_service.repo.OrdersRepository;
+import com.service.backend_service.repo.OrderRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.OrderService;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    private final OrdersRepository ordersRepository;
+    private final OrderRepository orderRepository;
 
     private final CartRepository cartRepository;
 
@@ -33,13 +33,13 @@ public class OrderServiceImpl implements OrderService {
     private final PriceCalculationService priceCalculationService;
     private final StockValidationService stockValidationService;
 
-    public OrderServiceImpl(OrdersRepository ordersRepository,
+    public OrderServiceImpl(OrderRepository orderRepository,
                             CartRepository cartRepository,
                             ProductRepository productRepository,
                             UserRepository userRepository,
                             PriceCalculationService priceCalculationService,
                             StockValidationService stockValidationService) {
-        this.ordersRepository = ordersRepository;
+        this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
@@ -65,15 +65,14 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = buildOrder(orderDto, context, calculatedTotalPrice);
-        Order savedOrder = ordersRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
         return ResponseEntity.ok(savedOrder);
     }
 
     private OrderCreationContext resolveOrderCreationContext(OrderDto orderDto) {
         Cart cart = cartRepository.findById(orderDto.getCartId())
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
-        Product product = productRepository.findById(orderDto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product = findProduct(orderDto.getProductId());
         User user = userRepository.findById(orderDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Integer cartQuantity = extractValidCartQuantity(cart);
@@ -111,23 +110,23 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResponseEntity<Order> getOrder(Long orderId) {
-        return ordersRepository.findById(orderId)
+        return orderRepository.findById(orderId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Override
     public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(ordersRepository.findAll());
+        return ResponseEntity.ok(orderRepository.findAll());
     }
 
     @Override
     public ResponseEntity<Order> updateOrder(Long orderId, OrderDto orderDto) {
-        return ordersRepository.findById(orderId)
+        return orderRepository.findById(orderId)
                 .map(existingOrder -> {
                     applyScalarUpdates(existingOrder, orderDto);
                     applyRelatedEntityUpdates(existingOrder, orderDto);
-                    return ResponseEntity.ok(ordersRepository.save(existingOrder));
+                    return ResponseEntity.ok(orderRepository.save(existingOrder));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -179,9 +178,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResponseEntity<String> deleteOrder(Long orderId) {
-        return ordersRepository.findById(orderId)
+        return orderRepository.findById(orderId)
                 .map(order -> {
-                    ordersRepository.delete(order);
+                    orderRepository.delete(order);
                     return ResponseEntity.ok("Order deleted successfully");
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

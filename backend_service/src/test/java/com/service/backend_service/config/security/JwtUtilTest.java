@@ -19,15 +19,18 @@ class JwtUtilTest {
 
     @Test
     void validateSecretRejectsShortSecret() {
-        assertThrows(IllegalStateException.class, () -> new JwtProperties("short-secret", null));
+        IllegalStateException exception =
+                assertThrows(IllegalStateException.class, () -> new JwtProperties("short-secret", null));
+        assertEquals("JWT secret configuration is invalid", exception.getMessage());
     }
 
     @Test
     void validateSecretRejectsWeakSecretWithoutRequiredCharacterClasses() {
-        assertThrows(
+        IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
                 () -> new JwtProperties("abcdefghijklmnopqrstuvwxyz123456", null)
         );
+        assertEquals("JWT secret configuration is invalid", exception.getMessage());
     }
 
     @Test

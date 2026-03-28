@@ -1,6 +1,7 @@
 package com.service.backend_service.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,6 +68,21 @@ class UserServiceImplTest {
         assertEquals(1L, response.getId());
         assertEquals("encoded", mapped.getPassword());
         verify(userRepository).save(mapped);
+    }
+
+    @Test
+    void registerReturnsConflictWhenEmailAlreadyExists() {
+        UserDto dto = new UserDto();
+        dto.setEmail("a@test.com");
+
+        User existing = new User();
+        existing.setId(1L);
+        when(userRepository.findByEmail("a@test.com")).thenReturn(Optional.of(existing));
+
+        var response = userService.register(dto);
+
+        assertEquals(409, response.getStatusCode().value());
+        assertNull(response.getBody());
     }
 
     @Test

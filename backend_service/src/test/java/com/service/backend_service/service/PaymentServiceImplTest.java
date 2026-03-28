@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.service.backend_service.enums.OrderStatus;
 import com.service.backend_service.enums.PaymentStatus;
 import com.service.backend_service.model.Order;
-import com.service.backend_service.repo.OrdersRepository;
+import com.service.backend_service.repo.OrderRepository;
 import com.service.backend_service.service.impl.PaymentServiceImpl;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -28,7 +28,7 @@ import org.springframework.http.ResponseEntity;
 class PaymentServiceImplTest {
 
     @Mock
-    private OrdersRepository orderRepo;
+    private OrderRepository orderRepo;
 
     private PaymentServiceImpl paymentService;
 

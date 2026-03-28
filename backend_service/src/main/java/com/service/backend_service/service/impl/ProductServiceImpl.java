@@ -8,6 +8,7 @@ import java.util.List;
 import org.modelmapper.Condition;
 import org.modelmapper.Conditions;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<Product> addProduct(ProductDto productDto) {
+        if (!isValidProduct(productDto)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         Product product = modelMapper.map(productDto, Product.class);
         Product savedProduct = productRepository.save(product);
         return ResponseEntity.ok(savedProduct);
@@ -47,6 +51,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<Product> updateProduct(Long productId, ProductDto productDto) {
+        if (!isValidPartialProductUpdate(productDto)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         return productRepository.findById(productId)
                 .map(existingProduct -> {
                     modelMapper.map(productDto, existingProduct);
@@ -62,6 +69,18 @@ public class ProductServiceImpl implements ProductService {
         } else {
             mapper.getTypeMap(ProductDto.class, Product.class).setPropertyCondition(NOT_NULL);
         }
+    }
+
+    private boolean isValidProduct(ProductDto productDto) {
+        return productDto.getPrice() != null
+                && productDto.getPrice() >= 0
+                && productDto.getStockQuantity() != null
+                && productDto.getStockQuantity() >= 0;
+    }
+
+    private boolean isValidPartialProductUpdate(ProductDto productDto) {
+        return (productDto.getPrice() == null || productDto.getPrice() >= 0)
+                && (productDto.getStockQuantity() == null || productDto.getStockQuantity() >= 0);
     }
 
     @Override

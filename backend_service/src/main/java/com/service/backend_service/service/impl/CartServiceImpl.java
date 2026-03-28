@@ -40,6 +40,9 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public ResponseEntity<Cart> addCart(CartDto cartDto) {
+        if (cartDto.getQuantity() == null || cartDto.getQuantity() <= 0) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         User user = userRepository.findById(cartDto.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Product product = productRepository.findById(cartDto.getProductId())
@@ -127,7 +130,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public ResponseEntity<String> deleteCart(Long cartId, Long productId) {
+    public ResponseEntity<String> deleteCartItem(Long cartId, Long productId) {
         return cartRepository.findById(cartId)
                 .map(cart -> {
                     Product cartProduct = cart.getProduct();

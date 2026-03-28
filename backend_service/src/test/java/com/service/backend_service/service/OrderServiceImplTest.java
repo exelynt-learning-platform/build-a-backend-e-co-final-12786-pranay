@@ -14,7 +14,7 @@ import com.service.backend_service.model.Order;
 import com.service.backend_service.model.Product;
 import com.service.backend_service.model.User;
 import com.service.backend_service.repo.CartRepository;
-import com.service.backend_service.repo.OrdersRepository;
+import com.service.backend_service.repo.OrderRepository;
 import com.service.backend_service.repo.ProductRepository;
 import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.PriceCalculationService;
@@ -33,7 +33,7 @@ import org.springframework.http.ResponseEntity;
 class OrderServiceImplTest {
 
     @Mock
-    private OrdersRepository ordersRepository;
+    private OrderRepository orderRepository;
 
     @Mock
     private CartRepository cartRepository;
@@ -76,7 +76,7 @@ class OrderServiceImplTest {
         when(stockValidationService.hasSufficientStock(product, 2)).thenReturn(true);
         when(priceCalculationService.calculateTotalPrice(2, 100.0)).thenReturn(new java.math.BigDecimal("200.00"));
         when(priceCalculationService.matchesExpectedTotal(200.0, new java.math.BigDecimal("200.00"))).thenReturn(true);
-        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<Order> response = orderService.addOrder(dto);
 
@@ -218,7 +218,7 @@ class OrderServiceImplTest {
         when(stockValidationService.hasSufficientStock(product, 3)).thenReturn(true);
         when(priceCalculationService.calculateTotalPrice(3, 9.99)).thenReturn(new java.math.BigDecimal("29.97"));
         when(priceCalculationService.matchesExpectedTotal(29.97, new java.math.BigDecimal("29.97"))).thenReturn(true);
-        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<Order> response = orderService.addOrder(dto);
 
@@ -228,7 +228,7 @@ class OrderServiceImplTest {
 
     @Test
     void getAllOrdersReturnsAllRows() {
-        when(ordersRepository.findAll()).thenReturn(List.of(new Order()));
+        when(orderRepository.findAll()).thenReturn(List.of(new Order()));
 
         ResponseEntity<List<Order>> response = orderService.getAllOrders();
 
@@ -244,8 +244,8 @@ class OrderServiceImplTest {
         OrderDto dto = new OrderDto();
         dto.setShippingDetails("New");
 
-        when(ordersRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(ordersRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ResponseEntity<Order> response = orderService.updateOrder(1L, dto);
 
@@ -257,11 +257,11 @@ class OrderServiceImplTest {
     void deleteOrderDeletesEntity() {
         Order order = new Order();
         order.setId(1L);
-        when(ordersRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         ResponseEntity<String> response = orderService.deleteOrder(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(ordersRepository).delete(order);
+        verify(orderRepository).delete(order);
     }
 }

@@ -8,6 +8,7 @@ import com.service.backend_service.repo.UserRepository;
 import com.service.backend_service.service.UserService;
 import java.util.List;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -48,6 +49,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public ResponseEntity<User> register(UserDto userDto) {
+        if (userDto.getEmail() != null && userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
         User user = modelMapper.map(userDto, User.class);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);

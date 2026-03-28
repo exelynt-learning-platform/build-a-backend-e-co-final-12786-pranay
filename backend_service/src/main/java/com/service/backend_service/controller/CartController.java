@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("carts/")
+@RequestMapping("carts")
 public class CartController {
 
     private final CartService cartService;
@@ -56,7 +56,7 @@ public class CartController {
     @DeleteMapping("/delete/{cartId}/{productId}")
     public ResponseEntity<ApiResponse<String>> deleteCartItem(@PathVariable Long cartId,
                                                               @PathVariable Long productId) {
-        ResponseEntity<String> response = cartService.deleteCart(cartId, productId);
+        ResponseEntity<String> response = cartService.deleteCartItem(cartId, productId);
         return responseHelper.build(response, "Cart deleted successfully");
     }
 }

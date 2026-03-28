@@ -14,5 +14,5 @@ public interface CartService {
 
     ResponseEntity<Cart> updateCart(Long cartId, CartDto cartDto);
 
-    ResponseEntity<String> deleteCart(Long cartId, Long productId);
+    ResponseEntity<String> deleteCartItem(Long cartId, Long productId);
 }

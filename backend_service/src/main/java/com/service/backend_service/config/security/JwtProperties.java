@@ -7,24 +7,22 @@ import org.springframework.util.StringUtils;
 public record JwtProperties(String secret, String previousSecret) {
 
     public JwtProperties {
-        validateSecret(secret, "jwt.secret");
+        validateSecret(secret);
         if (StringUtils.hasText(previousSecret)) {
-            validateSecret(previousSecret, "jwt.previous-secret");
+            validateSecret(previousSecret);
         }
     }
 
-    private static void validateSecret(String secret, String propertyName) {
+    private static void validateSecret(String secret) {
         if (!StringUtils.hasText(secret) || secret.length() < 32) {
-            throw new IllegalStateException(propertyName + " must be configured with at least 32 characters");
+            throw new IllegalStateException("JWT secret configuration is invalid");
         }
         boolean hasUppercase = secret.chars().anyMatch(Character::isUpperCase);
         boolean hasLowercase = secret.chars().anyMatch(Character::isLowerCase);
         boolean hasDigit = secret.chars().anyMatch(Character::isDigit);
         boolean hasSpecial = secret.chars().anyMatch(ch -> !Character.isLetterOrDigit(ch));
         if (!hasUppercase || !hasLowercase || !hasDigit || !hasSpecial) {
-            throw new IllegalStateException(
-                    propertyName + " must include uppercase, lowercase, digit, and special characters"
-            );
+            throw new IllegalStateException("JWT secret configuration is invalid");
         }
     }
 }
