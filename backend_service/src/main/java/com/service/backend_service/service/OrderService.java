@@ -1,18 +1,18 @@
 package com.service.backend_service.service;
 
 import com.service.backend_service.dto.OrderDto;
-import com.service.backend_service.model.Orders;
+import com.service.backend_service.model.Order;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 public interface OrderService {
-    ResponseEntity<Orders> addOrder(OrderDto orderDto);
+    ResponseEntity<Order> addOrder(OrderDto orderDto);
 
-    ResponseEntity<Orders> getOrder(Long orderId);
+    ResponseEntity<Order> getOrder(Long orderId);
 
-    ResponseEntity<List<Orders>> getAllOrders();
+    ResponseEntity<List<Order>> getAllOrders();
 
-    ResponseEntity<Orders> updateOrder(Long orderId, OrderDto orderDto);
+    ResponseEntity<Order> updateOrder(Long orderId, OrderDto orderDto);
 
     ResponseEntity<String> deleteOrder(Long orderId);
 }
